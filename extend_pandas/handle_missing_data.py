@@ -168,21 +168,10 @@ class MissingMethods:
         :param ascending:
         :return:
         """
-        return (
-            self._obj
-            .pipe(
-                lambda df: (
-                    df[df.isna().sum().sort_values(ascending=ascending).index]
-                )
-            )
-        )
+        return self._obj.pipe(lambda df: (df[df.isna().sum().sort_values(ascending=ascending).index]))
 
-    def create_shadow_matrix(
-        self,
-        true_string: str = "Missing",
-        false_string: str = "Not Missing",
-        only_missing: bool = False,
-    ) -> pd.DataFrame:
+    def create_shadow_matrix(self, true_string: str = "Missing", false_string: str = "Not Missing",
+                             only_missing: bool = False,) -> pd.DataFrame:
         """
         Creates a shadow matrix. A matrix with the same dimensions of the original df with True or False if the value
         was originally NaN.
@@ -194,18 +183,14 @@ class MissingMethods:
         """
         return (
             self._obj
-            .isna()
-            .pipe(lambda df: df[df.columns[df.any()]] if only_missing else df)
-            .replace({False: false_string, True: true_string})
-            .add_suffix("_NA")
+                .isna()
+                .pipe(lambda df: df[df.columns[df.any()]] if only_missing else df)
+                .replace({False: false_string, True: true_string})
+                .add_suffix("_NA")
         )
 
-    def bind_shadow_matrix(
-        self,
-        true_string: str = "Missing",
-        false_string: str = "Not Missing",
-        only_missing: bool = False,
-    ) -> pd.DataFrame:
+    def bind_shadow_matrix(self, true_string: str = "Missing", false_string: str = "Not Missing",
+                           only_missing: bool = False) -> pd.DataFrame:
         """
         Adds the shadow matrix to the original dataset
         :param true_string: value to represents the NaN value in the shadow matrix
@@ -276,7 +261,7 @@ class MissingMethods:
         plt.ylabel("Number of cases")
 
     def missing_variable_span_plot(
-        self, variable: str, span_every: int, rot: int = 0, figsize=None
+            self, variable: str, span_every: int, rot: int = 0, figsize=None
     ):
         """
         Plots a bar plot showing the number of complete and missing value per data block
@@ -305,7 +290,7 @@ class MissingMethods:
         plt.ylabel("Percentage missing")
         plt.legend(["Missing", "Present"])
         plt.title(
-            f"Percentage of missing values\nOver a repeating span of { span_every } ",
+            f"Percentage of missing values\nOver a repeating span of {span_every} ",
             loc="left",
         )
         plt.grid(False)
