@@ -33,6 +33,10 @@ class MissingMethods:
         all_original_na = [value for values in self.missing_value_representation_by_type.values() for value in values]
         return string_numeric_na + upper_string_na + cap_string_na + datetime_na + all_original_na
 
+    @staticmethod
+    def _filter_zero_rows_by_column(df, column):
+        return df.loc[df[column] != 0]
+
     def number_missing(self) -> int:
         """
         Returns the total number of NANs in the df
@@ -66,7 +70,7 @@ class MissingMethods:
         )
 
         if not show_zeros:
-            return missing_var_summ.loc[missing_var_summ['n_missing'] > 0]
+            return self._filter_zero_rows_by_column(missing_var_summ, 'n_missing')
         return missing_var_summ
 
     def missing_case_summary(self) -> pd.DataFrame:
