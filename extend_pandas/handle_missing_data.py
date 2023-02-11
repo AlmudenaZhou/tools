@@ -43,6 +43,9 @@ class MissingMethods:
             print(self._obj[column].value_counts(dropna=False))
             print('\n')
 
+    @staticmethod
+    def _strip_cat_cols(column):
+        return column.str.strip() if column.dtype in ['object'] else column
 
     def number_missing(self) -> int:
         """
@@ -223,19 +226,29 @@ class MissingMethods:
             axis="columns"
         )
 
-    def missing_scan_count(self, search) -> pd.DataFrame:
+    def missing_scan_count(self, search=None, show_zeros: bool = True) -> pd.DataFrame:
         """
         Returns the number of occurrences of the elements in search per column
+        :param show_zeros: if True, it keeps the columns that do not contain any possible nan. If False, it drops them.
         :param search: list of possible missing value representations
         :return:
         """
-        return (
-            self._obj.apply(axis="rows", func=lambda column: column.isin(search))
-            .sum()
-            .reset_index()
-            .rename(columns={"index": "variable", 0: "n"})
-            .assign(original_type=self._obj.dtypes.reset_index()[0])
+        if search is None:
+            search = self._all_missing_value_repr
+
+        scan_count = (
+            self._obj.apply(axis="rows", func=self._strip_cat_cols)
+                .apply(axis="rows", func=lambda column: column.isin(search))
+                .sum()
+                .reset_index()
+                .rename(columns={"index": "variable", 0: "n"})
+                .assign(pct=lambda df: df['n'] / self._obj.shape[0] * 100,
+                        original_type=self._obj.dtypes.reset_index()[0])
         )
+
+        if not show_zeros:
+            return self._filter_zero_rows_by_column(scan_count, 'n')
+        return scan_count
 
     # Plotting functions ---
 
