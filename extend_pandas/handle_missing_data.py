@@ -18,9 +18,9 @@ class MissingMethods:
     def __init__(self, pandas_obj):
         self._obj = pandas_obj
         self.missing_value_representation_by_type = {
-            'numerical': [0, -1, 99, 999, -99, -999],
             'categorical': ['-', 'na', 'n/a', 'null', 'nil', 'empty', '', '#n/d'],
-            'datetime': ['1970-01-01', '1900-01-01', '2099-12-31', '2999-12-31', '9999-12-31']
+            'datetime': ['1970-01-01', '1900-01-01', '2099-12-31', '2999-12-31', '9999-12-31'],
+            'numerical': [0, -1, 99, 999, -99, -999]
         }
         self._all_missing_value_repr = self._calc_all_possible_na_combinations()
 
