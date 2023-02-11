@@ -37,6 +37,13 @@ class MissingMethods:
     def _filter_zero_rows_by_column(df, column):
         return df.loc[df[column] != 0]
 
+    def print_value_counts_per_column(self):
+        for column in self._obj.columns:
+            print(f'------------ {column} ------------')
+            print(self._obj[column].value_counts(dropna=False))
+            print('\n')
+
+
     def number_missing(self) -> int:
         """
         Returns the total number of NANs in the df
