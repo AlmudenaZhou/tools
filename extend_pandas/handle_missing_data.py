@@ -16,6 +16,11 @@ except AttributeError:
 class MissingMethods:
     def __init__(self, pandas_obj):
         self._obj = pandas_obj
+        self.missing_value_representation_by_type = {
+            'numerical': [0, -1, 99, 999, -99, -999],
+            'categorical': ['-', 'na', 'n/a', 'null', 'nil', 'empty', ''],
+            'datetime': ['1970-01-01', '1900-01-01, 2099-12-31', '2999-12-31', '9999-12-31']
+        }
 
     def number_missing(self) -> int:
         """
@@ -213,7 +218,7 @@ class MissingMethods:
 
     def missing_scan_count(self, search) -> pd.DataFrame:
         """
-        Returns the number of apparitions of the elements in search per column
+        Returns the number of occurrences of the elements in search per column
         :param search: list of possible missing value representations
         :return:
         """
