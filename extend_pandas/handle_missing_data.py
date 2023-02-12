@@ -41,8 +41,10 @@ class MissingMethods:
     def _filter_zero_rows_by_column(df, column):
         return df.loc[df[column] != 0]
 
-    def print_value_counts_per_column(self):
-        for column in self._obj.columns:
+    def print_value_counts_per_column(self, variables: Optional[Union[list, pd.Index]] = None):
+        if variables is None:
+            variables = self._obj.columns
+        for column in variables:
             print(f'------------ {column} ------------')
             print(self._obj[column].value_counts(dropna=False))
             print('\n')
