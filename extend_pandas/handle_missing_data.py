@@ -283,9 +283,9 @@ class MissingMethods:
         Returns 2 df:
             - A df that contains a representation of each combination. It has 1 when the column is in the combination
             and 0 when it is not.
-            - A table with all the different combinations of the columns that ends with missing_sufix
+            - A table with all the different combinations of the columns that ends with missing_suffix
         and counts the number of missing values in that combination
-        :param missing_columns: list of columns of which the table will be creared
+        :param missing_columns: list of columns of which the table will be created
         :param sorted_output_by: if frequency, it sorts by the number of occurrences. If any other value, it sorts by
                                  the combination.
         :param drop_zeros: drop the columns with 0s
@@ -296,30 +296,44 @@ class MissingMethods:
         """
 
         if missing_columns is None:
-            missing_columns = self._obj.loc[:, self._obj.isna().sum(axis=0) > 0].columns
-        combs = list(chain.from_iterable(combinations(missing_columns, i)
-                                         for i in range(1, len(missing_columns) + 1)))
-        combs.insert(0, 'no_missing')
-        missing_freq_table = pd.Series(0, index=combs)
-        is_missing_table = pd.DataFrame(0, index=range(len(missing_freq_table.index)), columns=missing_columns)
+            missing_columns = self.get_columns_with_missing_values()
 
-        for idx, comb in enumerate(combs):
-            if comb != 'no_missing':
-                num_cols = len(comb)
-                all_missing_values_in_row = self._obj.loc[:, missing_columns].sum(axis=1)
-                missing_values_in_comb = self._obj.loc[:, comb].sum(axis=1)
-                are_all_comb_missing = missing_values_in_comb == num_cols
-                if missing_comb_exact_match:
-                    are_all_missing_in_row_in_comb = np.isclose(missing_values_in_comb, all_missing_values_in_row)
-                    missing_freq = (are_all_comb_missing & are_all_missing_in_row_in_comb).sum()
-                else:
+        if missing_comb_exact_match:
+            joint_missing_freq_table = self._obj.loc[:, missing_columns].isna().value_counts()
+            joint_missing_freq_table_index = joint_missing_freq_table.index.to_frame(index=False)
+
+            missing_freq_table_index = joint_missing_freq_table_index.apply(lambda row: tuple(row[row].index), axis=1)
+            missing_freq_table = pd.Series(joint_missing_freq_table.values, index=missing_freq_table_index)
+
+            is_missing_table = joint_missing_freq_table_index.replace({True: 1, False: 0})
+
+            if sorted_output_by != 'frequency':
+                combs = list(chain.from_iterable(combinations(missing_columns, i)
+                                                 for i in range(1, len(missing_columns) + 1)))
+                is_missing_table.index = missing_freq_table_index
+                missing_freq_table = missing_freq_table.loc[:, combs]
+                is_missing_table = is_missing_table.loc[:, combs]
+                is_missing_table.reset_index(drop=True, inplace=True)
+
+        else:
+            combs = list(chain.from_iterable(combinations(missing_columns, i)
+                                             for i in range(1, len(missing_columns) + 1)))
+            combs.insert(0, 'no_missing')
+            missing_freq_table = pd.Series(0, index=combs)
+            is_missing_table = pd.DataFrame(0, index=range(len(missing_freq_table.index)), columns=missing_columns)
+
+            for idx, comb in enumerate(combs):
+                if comb != 'no_missing':
+                    num_cols = len(comb)
+                    missing_values_in_comb = self._obj.loc[:, comb].sum(axis=1)
+                    are_all_comb_missing = missing_values_in_comb == num_cols
                     missing_freq = are_all_comb_missing.sum()
-                is_missing_table.loc[idx, comb] = 1
-                missing_freq_table[comb] = missing_freq
-            else:
-                missing_freq = (self._obj.loc[:, missing_columns].sum(axis=1) == 0).sum()
-                is_missing_table.loc[idx, :] = 0
-                missing_freq_table[comb] = missing_freq
+                    is_missing_table.loc[idx, comb] = 1
+                    missing_freq_table[comb] = missing_freq
+                else:
+                    missing_freq = (self._obj.loc[:, missing_columns].sum(axis=1) == 0).sum()
+                    is_missing_table.loc[idx, :] = 0
+                    missing_freq_table[comb] = missing_freq
         if drop_zeros:
             no_zeros_mask = (missing_freq_table != 0).values
             missing_freq_table = missing_freq_table.loc[no_zeros_mask]
@@ -327,6 +341,7 @@ class MissingMethods:
         if sorted_output_by == 'frequency':
             sorted_idx = np.argsort(missing_freq_table.values)
             is_missing_table = is_missing_table.iloc[sorted_idx]
+            is_missing_table.reset_index(drop=True, inplace=True)
             missing_freq_table = missing_freq_table[sorted_idx]
         return is_missing_table, missing_freq_table
 
