@@ -1,10 +1,14 @@
 import itertools
+from typing import Optional, Tuple, Union
+
+import matplotlib
 import pandas as pd
 from datetime import datetime
 import upsetplot
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+from itertools import chain, combinations
 
 
 try:
@@ -250,6 +254,60 @@ class MissingMethods:
             return self._filter_zero_rows_by_column(scan_count, 'n')
         return scan_count
 
+    def missing_combinations_freq_table(self, missing_columns: Optional[list] = None,
+                                        sorted_output_by: str = 'frequency', drop_zeros: bool = True,
+                                        missing_comb_exact_match: bool = True):
+        """
+        Returns 2 df:
+            - A df that contains a representation of each combination. It has 1 when the column is in the combination
+            and 0 when it is not.
+            - A table with all the different combinations of the columns that ends with missing_sufix
+        and counts the number of missing values in that combination
+        :param missing_columns: list of columns of which the table will be creared
+        :param sorted_output_by: if frequency, it sorts by the number of occurrences. If any other value, it sorts by
+                                 the combination.
+        :param drop_zeros: drop the columns with 0s
+        :param missing_comb_exact_match: if True it only counts when the NaNs of the row are only the ones that are in
+                                         the combination. If False, the combination can be a subset of the total NaNs
+                                         in the row.
+        :return:
+        """
+
+        if missing_columns is None:
+            missing_columns = self._obj.loc[:, self._obj.isna().sum(axis=0) > 0].columns
+        combs = list(chain.from_iterable(combinations(missing_columns, i)
+                                         for i in range(1, len(missing_columns) + 1)))
+        combs.insert(0, 'no_missing')
+        missing_freq_table = pd.Series(0, index=combs)
+        is_missing_table = pd.DataFrame(0, index=range(len(missing_freq_table.index)), columns=missing_columns)
+
+        for idx, comb in enumerate(combs):
+            if comb != 'no_missing':
+                num_cols = len(comb)
+                all_missing_values_in_row = self._obj.loc[:, missing_columns].sum(axis=1)
+                missing_values_in_comb = self._obj.loc[:, comb].sum(axis=1)
+                are_all_comb_missing = missing_values_in_comb == num_cols
+                if missing_comb_exact_match:
+                    are_all_missing_in_row_in_comb = np.isclose(missing_values_in_comb, all_missing_values_in_row)
+                    missing_freq = (are_all_comb_missing & are_all_missing_in_row_in_comb).sum()
+                else:
+                    missing_freq = are_all_comb_missing.sum()
+                is_missing_table.loc[idx, comb] = 1
+                missing_freq_table[comb] = missing_freq
+            else:
+                missing_freq = (self._obj.loc[:, missing_columns].sum(axis=1) == 0).sum()
+                is_missing_table.loc[idx, :] = 0
+                missing_freq_table[comb] = missing_freq
+        if drop_zeros:
+            no_zeros_mask = (missing_freq_table != 0).values
+            missing_freq_table = missing_freq_table.loc[no_zeros_mask]
+            is_missing_table = is_missing_table.loc[no_zeros_mask]
+        if sorted_output_by == 'frequency':
+            sorted_idx = np.argsort(missing_freq_table.values)
+            is_missing_table = is_missing_table.iloc[sorted_idx]
+            missing_freq_table = missing_freq_table[sorted_idx]
+        return is_missing_table, missing_freq_table
+
     # Plotting functions ---
 
     def missing_variable_plot(self):
@@ -339,3 +397,62 @@ class MissingMethods:
             .value_counts(variables)
             .pipe(lambda df: upsetplot.plot(df, **kwargs))
         )
+
+    @staticmethod
+    def add_labels(x, y):
+        fixed_x_coord_to_write_label = max(y) * 1.25
+        for i in range(len(y)):
+            plt.text(fixed_x_coord_to_write_label, x[i], y[i], ha='center', fontsize=18)
+
+    def mice_plot(self, missing_columns: Optional[list] = None, sorted_output_by: str = 'frequency',
+                  drop_zeros: bool = True, missing_comb_exact_match: bool = True,
+                  figsize: Tuple[Union[int, float]] = (6.6, 6)):
+
+        is_missing_table, missing_freq_table = self.missing_combinations_freq_table(missing_columns,
+                                                                                    sorted_output_by,
+                                                                                    drop_zeros,
+                                                                                    missing_comb_exact_match)
+        data = is_missing_table
+        table_cell_width = int(np.round(len(data.index) / len(data.columns)))
+        all_columns_for_new_width = []
+        for col in data.columns:
+            all_columns_for_new_width.extend([col] * table_cell_width)
+
+        data = data.loc[:, all_columns_for_new_width]
+
+        row_labels = range(len(data.index))
+        col_labels = is_missing_table.columns
+        xticks = np.arange(-0.5, len(data.index), table_cell_width)
+        yticks = np.arange(-0.5, len(data.index), 1)
+
+        fig, (ax, ax2) = plt.subplots(1, 2, figsize=figsize, gridspec_kw={'width_ratios': [10, 1]},
+                                      sharey=True)
+        fig.subplots_adjust(wspace=0)
+
+        cmap = matplotlib.colors.ListedColormap(['lightblue', 'tomato'])
+        bounds = [0, 0.5, 1]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+        ax.imshow(data, cmap=cmap, norm=norm)
+        ax.grid(which='major', axis='both', linestyle='-', color='k', linewidth=2)
+        ax.set_xticks(xticks)
+        ax.set_yticks(yticks)
+        ax.xaxis.set_major_formatter(matplotlib.ticker.NullFormatter())
+        ax.xaxis.set_minor_locator(matplotlib.ticker.FixedLocator(np.arange(table_cell_width / 2 - 0.5,
+                                                                            len(data.index),
+                                                                            table_cell_width)))
+        ax.xaxis.set_minor_formatter(matplotlib.ticker.FixedFormatter(col_labels))
+        ax.tick_params(axis='x', which='minor', labelsize=18)
+        ax.yaxis.set_ticklabels([])
+
+        ybarh = (missing_freq_table / self._obj.shape[0]).values.round(3)
+        ax2.barh(row_labels, ybarh)
+        self.add_labels(row_labels, ybarh)
+        ax2.xaxis.set_ticklabels([])
+        ax2.set_xlim([0, max(ybarh) * 1.5])
+        ax2.xaxis.set_major_formatter(matplotlib.ticker.NullFormatter())
+        ax2.xaxis.set_minor_locator(matplotlib.ticker.FixedLocator(np.arange(table_cell_width / 2 - 0.5,
+                                                                             len(data.index),
+                                                                             table_cell_width)))
+        ax2.xaxis.set_minor_formatter(matplotlib.ticker.FixedFormatter(col_labels))
+        ax2.grid(visible=True, axis='y', color='k')
+        plt.savefig('image.png')
