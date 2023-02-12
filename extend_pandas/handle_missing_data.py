@@ -41,6 +41,9 @@ class MissingMethods:
     def _filter_zero_rows_by_column(df, column):
         return df.loc[df[column] != 0]
 
+    def get_columns_with_missing_values(self):
+        return self._obj.loc[:, self._obj.isna().sum(axis=0) > 0].columns
+
     def print_value_counts_per_column(self, variables: Optional[Union[list, pd.Index]] = None):
         if variables is None:
             variables = self._obj.columns
@@ -427,11 +430,11 @@ class MissingMethods:
         """
 
         if variables is None:
-            variables = self._obj.columns.tolist()
+            variables = self.get_columns_with_missing_values()
 
         return (
-            self._obj.isna()
-            .value_counts(variables)
+            self._obj.loc[:, variables].isna()
+            .value_counts()
             .pipe(lambda df: upsetplot.plot(df, **kwargs))
         )
 
