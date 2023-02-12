@@ -103,7 +103,7 @@ class MissingMethods:
         return self._obj.assign(
             case=lambda df: df.index,
             n_missing=lambda df: df.isna().sum(axis=1),
-            pct_missing=lambda df: df["n_missing"] / df.shape[1] * 100,
+            pct_missing=lambda df: df["n_missing"] / self._obj.shape[1] * 100,
         )[["case", "n_missing", "pct_missing"]]
 
     def missing_variable_table(self) -> pd.DataFrame:
