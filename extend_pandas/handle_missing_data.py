@@ -455,4 +455,3 @@ class MissingMethods:
                                                                              table_cell_width)))
         ax2.xaxis.set_minor_formatter(matplotlib.ticker.FixedFormatter(col_labels))
         ax2.grid(visible=True, axis='y', color='k')
-        plt.savefig('image.png')
