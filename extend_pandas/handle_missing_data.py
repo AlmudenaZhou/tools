@@ -191,13 +191,15 @@ class MissingMethods:
         """
         return self._obj.pipe(lambda df: (df[df.isna().sum().sort_values(ascending=ascending).index]))
 
-    def create_shadow_matrix(self, true_string: str = "Missing", false_string: str = "Not Missing",
-                             only_missing: bool = False,) -> pd.DataFrame:
+    def create_shadow_matrix(self, true_string: Union[str, bool, int, float] = "Missing",
+                             false_string: Union[str, bool, int, float] = "Not Missing",
+                             missing_suffix: str = '_NA', only_missing: bool = False) -> pd.DataFrame:
         """
         Creates a shadow matrix. A matrix with the same dimensions of the original df with True or False if the value
         was originally NaN.
         :param true_string: value to represents the NaN value in the shadow matrix
         :param false_string: value to represents the complete value in the shadow matrix
+        :param missing_suffix: suffix added to the shadow matrix columns
         :param only_missing: if True, it only makes the shadow to the columns with NaN values
                              if False, it makes it for all the columns
         :return:
@@ -207,7 +209,7 @@ class MissingMethods:
                 .isna()
                 .pipe(lambda df: df[df.columns[df.any()]] if only_missing else df)
                 .replace({False: false_string, True: true_string})
-                .add_suffix("_NA")
+                .add_suffix(missing_suffix)
         )
 
     def bind_shadow_matrix(self, true_string: str = "Missing", false_string: str = "Not Missing",
