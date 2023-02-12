@@ -213,26 +213,33 @@ class MissingMethods:
         )
 
     def bind_shadow_matrix(self, true_string: str = "Missing", false_string: str = "Not Missing",
-                           only_missing: bool = False) -> pd.DataFrame:
+                           missing_suffix: str = '_NA', only_missing: bool = False,
+                           inplace: bool = False) -> pd.DataFrame:
         """
         Adds the shadow matrix to the original dataset
         :param true_string: value to represents the NaN value in the shadow matrix
         :param false_string:  value to represents the complete value in the shadow matrix
+        :param missing_suffix: suffix added to the shadow matrix columns
         :param only_missing: if True, it only makes the shadow to the columns with NaN values
                              if False, it makes it for all the columns
+        :param inplace: if True, it saves the result in the original object
         :return:
         """
-        return pd.concat(
+        df_with_shadow_matrix = pd.concat(
             objs=[
                 self._obj,
                 self._obj.missing.create_shadow_matrix(
                     true_string=true_string,
                     false_string=false_string,
+                    missing_suffix=missing_suffix,
                     only_missing=only_missing
                 )
             ],
             axis="columns"
         )
+        if inplace:
+            self._obj = df_with_shadow_matrix
+        return df_with_shadow_matrix
 
     def missing_scan_count(self, search=None, show_zeros: bool = True) -> pd.DataFrame:
         """
