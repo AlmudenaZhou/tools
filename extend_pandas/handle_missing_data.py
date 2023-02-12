@@ -241,15 +241,26 @@ class MissingMethods:
             self._obj = df_with_shadow_matrix
         return df_with_shadow_matrix
 
-    def missing_scan_count(self, search=None, show_zeros: bool = True) -> pd.DataFrame:
+    def missing_scan_count_with_default_na_representation(self, elements_to_skip: list = None, show_zeros: bool = True):
+        """
+        Returns the number of occurrences of the default na representations. The user can choose to avoid specific
+        elements from the list
+        :param elements_to_skip: elements that will be skipped in the occurrence count
+        :param show_zeros: if True, it keeps the columns that do not contain any possible nan. If False, it drops them.
+        :return:
+        """
+        search = self._all_missing_value_repr
+        if elements_to_skip is not None:
+            search = [search_val for search_val in search if search_val not in elements_to_skip]
+        return self.missing_scan_count(search, show_zeros)
+
+    def missing_scan_count(self, search, show_zeros: bool = True) -> pd.DataFrame:
         """
         Returns the number of occurrences of the elements in search per column
         :param show_zeros: if True, it keeps the columns that do not contain any possible nan. If False, it drops them.
         :param search: list of possible missing value representations
         :return:
         """
-        if search is None:
-            search = self._all_missing_value_repr
 
         scan_count = (
             self._obj.apply(axis="rows", func=self._strip_cat_cols)
