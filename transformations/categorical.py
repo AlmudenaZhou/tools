@@ -13,13 +13,15 @@ class OneHotTargetedTransformer(SklearnTargetedTransformer):
         return super().fit(x)
 
     def _individual_fit(self, x, feature):
-        return OneHotEncoder(sparse=False, **self._model_kwargs).fit(x[[feature]])
+        ohe = OneHotEncoder(sparse=False, **self._model_kwargs).fit(x[[feature]])
+        self._array_column_names.extend(ohe.categories_[0])
+        return ohe
 
     def transform(self, x, y=None):
         return super().transform(x)
 
     def _individual_transform(self, x, feature):
-        self._array_column_names.extend(self._encoders[feature].categories_[0])
+
         return self._encoders[feature].transform(x[[feature]])
 
 
@@ -36,6 +38,7 @@ class OrdinalTargetedTransformer(SklearnTargetedTransformer):
         """
         Issue: handle_unknown: 'use_encoded_value' is not properly working and throws an error
         """
+        self._array_column_names.append(feature)
         if self._model_kwargs['handle_unknown'] == 'use_encoded_value':
             return self._fit_model_with_nans(x, feature)
         else:
@@ -56,7 +59,6 @@ class OrdinalTargetedTransformer(SklearnTargetedTransformer):
         """
         Since the handle unknown is broken in transform, I will bypass it
         """
-        self._array_column_names.append(feature)
         if self._model_kwargs['handle_unknown'] == 'use_encoded_value':
             return self._transform_data_with_nans(x, feature)
         else:

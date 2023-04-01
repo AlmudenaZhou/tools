@@ -30,9 +30,10 @@ class SklearnTargetedTransformer(TargetedTransformer, ABC):
     def __init__(self, columns_to_apply=None, **model_kwargs):
         super().__init__(columns_to_apply, **model_kwargs)
         self._encoders = {}
-        self._array_column_names = []
+        self._array_column_names = None
 
     def fit(self, x, y=None):
+        self._array_column_names = []
         self._encoders = {}
         features = self._get_features(x)
 
