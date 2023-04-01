@@ -19,7 +19,7 @@ class OneHotTargetedTransformer(SklearnTargetedTransformer):
         return super().transform(x)
 
     def _individual_transform(self, x, feature):
-        self._array_columns.extend(self._encoders[feature].categories_[0])
+        self._array_column_names.extend(self._encoders[feature].categories_[0])
         return self._encoders[feature].transform(x[[feature]])
 
 
@@ -56,7 +56,7 @@ class OrdinalTargetedTransformer(SklearnTargetedTransformer):
         """
         Since the handle unknown is broken in transform, I will bypass it
         """
-        self._array_columns.append(feature)
+        self._array_column_names.append(feature)
         if self._model_kwargs['handle_unknown'] == 'use_encoded_value':
             return self._transform_data_with_nans(x, feature)
         else:
