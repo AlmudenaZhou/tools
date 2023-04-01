@@ -54,3 +54,11 @@ class SklearnTargetedTransformer(TargetedTransformer, ABC):
     @abstractmethod
     def _individual_transform(self, x, feature):
         pass
+
+
+class NoTransformer(TargetedTransformer):
+
+    def transform(self, x, y=None):
+        features = self._get_features(x)
+        self._array_column_names.extend(features)
+        return x[features]
