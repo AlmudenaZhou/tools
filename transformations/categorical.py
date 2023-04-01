@@ -14,7 +14,8 @@ class OneHotTargetedTransformer(SklearnTargetedTransformer):
 
     def _individual_fit(self, x, feature):
         ohe = OneHotEncoder(sparse=False, **self._model_kwargs).fit(x[[feature]])
-        self._array_column_names.extend(ohe.categories_[0])
+        column_names = [f'{feature}_{category}' for category in ohe.categories_[0]]
+        self._array_column_names.extend(column_names)
         return ohe
 
     def transform(self, x, y=None):
