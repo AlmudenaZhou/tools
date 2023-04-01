@@ -1,3 +1,5 @@
+import re
+
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 
@@ -14,15 +16,20 @@ class OneHotTargetedTransformer(SklearnTargetedTransformer):
 
     def _individual_fit(self, x, feature):
         ohe = OneHotEncoder(sparse=False, **self._model_kwargs).fit(x[[feature]])
-        column_names = [f'{feature}__{category}' for category in ohe.categories_[0]]
+        column_names = [f'{feature}__{self._clean_category_name(category)}' for category in ohe.categories_[0]]
         self._array_column_names.extend(column_names)
         return ohe
+
+    @staticmethod
+    def _clean_category_name(category):
+        category = category.lower()
+        category = re.sub('\s+', '_', category)
+        return category
 
     def transform(self, x, y=None):
         return super().transform(x)
 
     def _individual_transform(self, x, feature):
-
         return self._encoders[feature].transform(x[[feature]])
 
 
