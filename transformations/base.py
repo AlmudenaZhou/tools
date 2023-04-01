@@ -58,7 +58,11 @@ class SklearnTargetedTransformer(TargetedTransformer, ABC):
 
 class NoTransformer(TargetedTransformer):
 
-    def transform(self, x, y=None):
+    def fit(self, x, y=None):
         features = self._get_features(x)
         self._array_column_names.extend(features)
+        return self
+
+    def transform(self, x, y=None):
+        features = self._get_features(x)
         return x[features]
