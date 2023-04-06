@@ -36,6 +36,7 @@ class TargetedTransformer(TransformerMixin, ExtendedSaveLoadPickle):
         self._columns_to_apply = columns_to_apply
         self._model_kwargs = model_kwargs
         self._array_column_names = []
+        self._encoders = {}
 
     def _get_features(self, x):
         return x.columns if self._columns_to_apply is None else self._columns_to_apply
@@ -52,7 +53,6 @@ class SklearnTargetedTransformer(TargetedTransformer, ABC):
 
     def __init__(self, columns_to_apply=None, **model_kwargs):
         super().__init__(columns_to_apply, **model_kwargs)
-        self._encoders = {}
 
     def fit(self, x, y=None):
         self._array_column_names = []
