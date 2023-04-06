@@ -1,10 +1,32 @@
 from abc import abstractmethod, ABC
+import os
+from typing import Optional
+
+import joblib
 
 import numpy as np
 from sklearn.base import TransformerMixin
 
 
-class TargetedTransformer(TransformerMixin):
+class ExtendedSaveLoadPickle:
+
+    @staticmethod
+    def save_base_model(model, file_name, file_path: Optional[str] = None):
+        complete_file_path = file_name
+        if file_path:
+            complete_file_path = os.path.join(file_path, file_name)
+        joblib.dump(model, complete_file_path)
+
+    @staticmethod
+    def load_base_model(file_name, file_path: Optional[str] = None):
+        complete_file_path = file_name
+        if file_path:
+            complete_file_path = os.path.join(file_path, file_name)
+        model = joblib.load(complete_file_path)
+        return model
+
+
+class TargetedTransformer(TransformerMixin, ExtendedSaveLoadPickle):
     """
     Dummy class that allows us to modify only the methods that interest us,
     avoiding redundancy.
