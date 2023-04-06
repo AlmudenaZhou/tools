@@ -1,4 +1,5 @@
 import re
+from typing import Optional
 
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
@@ -31,6 +32,9 @@ class OneHotTargetedTransformer(SklearnTargetedTransformer):
 
     def _individual_transform(self, x, feature):
         return self._encoders[feature].transform(x[[feature]])
+
+    def _get_array_column_names_from_model(self, model: Optional = None, model_name: str = ''):
+        return [f'{model_name}__{self._clean_category_name(category)}' for category in model.categories_[0]]
 
 
 class OrdinalTargetedTransformer(SklearnTargetedTransformer):

@@ -48,6 +48,48 @@ class TargetedTransformer(TransformerMixin, ExtendedSaveLoadPickle):
     def transform(self, x, y=None):
         pass
 
+    def save_models(self,  models_to_save: Optional[list] = None, file_path: Optional[str] = None):
+        """
+        Saves the models included in the models_to_save in a pkl at file_path
+        :param file_path: path where the models will be saved.
+        If file_path is None it will be saved at the working directory
+        :param models_to_save: if None it saves all the models. Else, it must contain a list with the names of the
+        individual models in self._encoders, that will be the name by default of the model saved.
+        """
+        if models_to_save:
+            for model_name in models_to_save:
+                model = self._encoders[model_name]
+                file_name = model_name + '.pkl'
+                self.save_base_model(model, file_name, file_path)
+        else:
+            for model_name, model in self._encoders.items():
+                file_name = model_name + '.pkl'
+                self.save_base_model(model, file_name, file_path)
+
+    def load_models(self, models_to_load: Optional[list] = None, file_path: Optional[str] = None):
+        """
+        Loads the models at the instance, specified in models_to_load that are in file_path
+        :param file_path: path where the models are. If None, it will be the working directory
+        :param models_to_load: name of the files to load. If None, it will load all the pkl files at the file_path.
+        :return: dictionary with the models loaded
+        """
+        file_names = models_to_load
+        if models_to_load is None:
+            if file_path is None:
+                file_path = os.getcwd()
+            file_names = [file for file in os.listdir(file_path) if file.endswith('pkl')]
+
+        for file_name in file_names:
+            model = self.load_base_model(file_name, file_path)
+            model_name = file_name.replace('.pkl', '')
+            self._encoders[model_name] = model
+            self._array_column_names.extend(self._get_array_column_names_from_model(model, model_name))
+        return self._encoders
+
+    @staticmethod
+    def _get_array_column_names_from_model(model: Optional = None, model_name: str = ''):
+        return [model_name]
+
 
 class SklearnTargetedTransformer(TargetedTransformer, ABC):
 
@@ -88,3 +130,9 @@ class NoTransformer(TargetedTransformer):
     def transform(self, x, y=None):
         features = self._get_features(x)
         return x[features]
+
+    def save_models(self,  models_to_save: Optional[list] = None, file_path: Optional[str] = None):
+        pass
+
+    def load_models(self, models_to_load: Optional[list] = None, file_path: Optional[str] = None):
+        pass
