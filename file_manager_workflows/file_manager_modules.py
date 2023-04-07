@@ -18,8 +18,15 @@ class Manager(ABC):
             complete_file_path = os.path.join(file_path, file_name)
         return complete_file_path
 
+    @staticmethod
+    def create_file_path(file_path):
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+            logging.info(f'{file_path} was created')
+
     def save(self, obj, raw_file_name, file_path: Optional[str] = None):
         complete_file_path = self._get_complete_file_path(raw_file_name, file_path)
+        self.create_file_path(file_path)
         self._specific_save(obj, complete_file_path)
         logging.info(f'{complete_file_path} was saved')
 
