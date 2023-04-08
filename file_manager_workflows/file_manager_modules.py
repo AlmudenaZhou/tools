@@ -25,10 +25,13 @@ class Manager(ABC):
             os.makedirs(file_path)
             logging.info(f'{file_path} was created')
 
-    def save(self, obj, raw_file_name, file_path: Optional[str] = None):
+    def save(self, obj, raw_file_name, file_path: Optional[str] = None, append_to_file=False):
         complete_file_path = self.get_complete_file_path(raw_file_name, file_path)
         self.create_file_path(file_path)
-        self._specific_save(obj, complete_file_path)
+        if not append_to_file:
+            self._specific_save(obj, complete_file_path)
+        else:
+            self._specific_append(obj, complete_file_path)
         logging.info(f'{complete_file_path} was saved')
 
     def load(self, raw_file_name, file_path: Optional[str] = None):
@@ -39,6 +42,11 @@ class Manager(ABC):
     @staticmethod
     @abstractmethod
     def _specific_save(obj, complete_file_path):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _specific_append(obj, complete_file_path):
         pass
 
     @staticmethod
@@ -56,6 +64,12 @@ class PickleManager(Manager):
         joblib.dump(obj, complete_file_path)
 
     @staticmethod
+    def _specific_append(obj, complete_file_path):
+        prev_obj = PickleManager._specific_load(complete_file_path)
+        new_obj = [prev_obj, obj]
+        joblib.dump(new_obj, complete_file_path)
+
+    @staticmethod
     def _specific_load(complete_file_path):
         obj = joblib.load(complete_file_path)
         return obj
@@ -69,6 +83,12 @@ class YamlManager(Manager):
     def _specific_save(obj, complete_file_path):
         with open(complete_file_path, "w") as file:
             yaml.dump(obj, file)
+
+    @staticmethod
+    def _specific_append(obj, complete_file_path):
+        prev_obj = YamlManager._specific_load(complete_file_path)
+        prev_obj.update(obj)
+        YamlManager._specific_save(prev_obj, complete_file_path)
 
     @staticmethod
     def _specific_load(complete_file_path):
