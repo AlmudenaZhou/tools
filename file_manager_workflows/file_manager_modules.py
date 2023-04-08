@@ -11,8 +11,9 @@ class Manager(ABC):
 
     _extension: str
 
-    def _get_complete_file_path(self, raw_file_name, file_path):
-        file_name = raw_file_name + self._extension
+    @classmethod
+    def get_complete_file_path(cls, raw_file_name, file_path):
+        file_name = raw_file_name + cls._extension
         complete_file_path = file_name
         if file_path:
             complete_file_path = os.path.join(file_path, file_name)
@@ -25,13 +26,13 @@ class Manager(ABC):
             logging.info(f'{file_path} was created')
 
     def save(self, obj, raw_file_name, file_path: Optional[str] = None):
-        complete_file_path = self._get_complete_file_path(raw_file_name, file_path)
+        complete_file_path = self.get_complete_file_path(raw_file_name, file_path)
         self.create_file_path(file_path)
         self._specific_save(obj, complete_file_path)
         logging.info(f'{complete_file_path} was saved')
 
     def load(self, raw_file_name, file_path: Optional[str] = None):
-        complete_file_path = self._get_complete_file_path(raw_file_name, file_path)
+        complete_file_path = self.get_complete_file_path(raw_file_name, file_path)
         obj = self._specific_load(complete_file_path)
         return obj
 
