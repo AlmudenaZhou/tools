@@ -36,7 +36,7 @@ class TargetedTransformer(TransformerMixin, ExtendedSaveLoadPickle):
         self._columns_to_apply = columns_to_apply
         self._model_kwargs = model_kwargs
         self._array_column_names = []
-        self._encoders = {}
+        self._models = {}
 
     def _get_features(self, x):
         return x.columns if self._columns_to_apply is None else self._columns_to_apply
@@ -58,11 +58,11 @@ class TargetedTransformer(TransformerMixin, ExtendedSaveLoadPickle):
         """
         if models_to_save:
             for model_name in models_to_save:
-                model = self._encoders[model_name]
+                model = self._models[model_name]
                 file_name = model_name + '.pkl'
                 self.save_base_model(model, file_name, file_path)
         else:
-            for model_name, model in self._encoders.items():
+            for model_name, model in self._models.items():
                 file_name = model_name + '.pkl'
                 self.save_base_model(model, file_name, file_path)
 
@@ -82,9 +82,9 @@ class TargetedTransformer(TransformerMixin, ExtendedSaveLoadPickle):
         for file_name in file_names:
             model = self.load_base_model(file_name, file_path)
             model_name = file_name.replace('.pkl', '')
-            self._encoders[model_name] = model
+            self._models[model_name] = model
             self._array_column_names.extend(self._get_array_column_names_from_model(model, model_name))
-        return self._encoders
+        return self._models
 
     @staticmethod
     def _get_array_column_names_from_model(model: Optional = None, model_name: str = ''):
