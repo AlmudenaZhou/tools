@@ -13,6 +13,12 @@ class ManagerWorkflow:
         self.manager_module = None
 
     @staticmethod
+    def get_model_class_path_from_model(model):
+        model_class_path = model.__class__.__str__(model.__class__)
+        model_class_path = model_class_path.split("'")[1]
+        return model_class_path
+
+    @staticmethod
     def get_model_manager_config_file():
         yaml_manager = YamlManager()
         cwd = os.getcwd()
@@ -53,7 +59,8 @@ class SaveWorkflow(ManagerWorkflow):
         be replaced
         """
         for file_name, model in models_to_save.items():
-            class_name = model.__class__.split('.')[-1]
+            model_class_path = self.get_model_class_path_from_model(model)
+            class_name = model_class_path.split('.')[-1]
             self.change_manager_module(class_name)
             file_name_path = os.path.split(file_name)
             if len(file_name_path) > 1:
@@ -63,7 +70,7 @@ class SaveWorkflow(ManagerWorkflow):
         self._save_config_file(append_file)
 
     def _save_model(self, model, file_name, file_path, save_separated):
-        model_class_path = model.__class__
+        model_class_path = self.get_model_class_path_from_model(model)
         model_id = id(model)
         is_custom = '_models' in model.__dict__.keys()
         if save_separated:
