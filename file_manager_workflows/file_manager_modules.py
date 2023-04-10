@@ -33,7 +33,10 @@ class Manager(ABC):
 
     def save(self, obj, raw_file_name, file_path: Optional[str] = None, append_to_file=False):
         complete_file_path = self.get_complete_file_path(raw_file_name, file_path)
-        self.create_file_path(file_path)
+
+        if file_path is not None:
+            self.create_file_path(file_path)
+
         if not append_to_file:
             self._specific_save(obj, complete_file_path)
         else:
