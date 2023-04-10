@@ -13,10 +13,16 @@ class Manager(ABC):
 
     @classmethod
     def get_complete_file_path(cls, raw_file_name, file_path):
+        """
+        Function that returns the raw_file_name with the specific extension appended and joined to the file_path.
+        :param raw_file_name: file_name without the extension
+        :param file_path: file_path. If None, it uses the working directory
+        :return:
+        """
         file_name = raw_file_name + cls._extension
-        complete_file_path = file_name
-        if file_path:
-            complete_file_path = os.path.join(file_path, file_name)
+        if file_path is None:
+            file_path = os.getcwd()
+        complete_file_path = os.path.join(file_path, file_name)
         return complete_file_path
 
     @staticmethod
