@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import joblib
+import numpy as np
+import pandas as pd
 import yaml
 
 
@@ -75,8 +77,17 @@ class PickleManager(Manager):
     @staticmethod
     def _specific_append(obj, complete_file_path):
         prev_obj = PickleManager._specific_load(complete_file_path)
+        PickleManager._check_same_type_obj_specific_append(prev_obj, obj, complete_file_path)
         new_obj = [prev_obj, obj]
         joblib.dump(new_obj, complete_file_path)
+
+    @staticmethod
+    def _check_same_type_obj_specific_append(prev_obj, obj, complete_file_path):
+        prev_obj_type = type(prev_obj)
+        obj_type = type(obj)
+        error_msg = f'The object at {complete_file_path} is type {prev_obj_type} while the new one you are ' \
+                    f'passing is {obj_type}. Both must be the same to append it one to another.'
+        raise TypeError(error_msg)
 
     @staticmethod
     def _specific_load(complete_file_path):
