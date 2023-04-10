@@ -78,8 +78,28 @@ class PickleManager(Manager):
     def _specific_append(obj, complete_file_path):
         prev_obj = PickleManager._specific_load(complete_file_path)
         PickleManager._check_same_type_obj_specific_append(prev_obj, obj, complete_file_path)
-        new_obj = [prev_obj, obj]
+        new_obj = PickleManager._append_objects(prev_obj, obj)
         joblib.dump(new_obj, complete_file_path)
+
+    @staticmethod
+    def _append_objects(prev_obj, obj):
+
+        if isinstance(prev_obj, list):
+            new_obj = prev_obj.extend(obj)
+
+        elif isinstance(prev_obj, tuple):
+            new_obj = prev_obj + obj
+
+        elif isinstance(prev_obj, np.ndarray):
+            new_obj = np.concatenate([prev_obj, obj])
+
+        elif isinstance(prev_obj, (pd.Series, pd.DataFrame)):
+            new_obj = pd.concat([prev_obj, obj])
+
+        else:
+            raise NotImplemented(f'The type {type(prev_obj)} is not implemented as an append method of pickle manager')
+
+        return new_obj
 
     @staticmethod
     def _check_same_type_obj_specific_append(prev_obj, obj, complete_file_path):
