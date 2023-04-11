@@ -14,7 +14,12 @@ def file_managers_input_data():
 
     data = pd.DataFrame(np.random.normal(size=(100, 3)), columns=['a', 'b', 'c'])
     data = data.astype(dtypes_by_column)
-    return data
+
+    data_to_append = pd.DataFrame(np.random.normal(size=(50, 3)), columns=['a', 'b', 'c'])
+    data_to_append = data_to_append.astype(dtypes_by_column)
+
+    file_path = os.path.join(os.path.dirname(__file__), 'files')
+    return {'data': data, 'data_to_append': data_to_append, 'file_path': file_path}
 
 
 def test_create_folder():
@@ -46,3 +51,31 @@ def test_save_pickle_manager(file_managers_input_data):
     assert check_string_inputs, 'The object part of the data saved and the original object data are not the same'
 
     os.remove(complete_file_path)
+
+
+def test_append_pickle_manager(file_managers_input_data):
+
+    file_path = file_managers_input_data['file_path']
+    data_to_append = file_managers_input_data['data_to_append']
+
+    complete_file_path = os.path.join(file_path, 'test_data.pkl')
+
+    # It creates a new file to ensure the integrity of the data
+    joblib.dump(file_managers_input_data['data'], complete_file_path)
+
+    # Load the data that has been saved and saves the ground truth
+    prev_loaded_data = joblib.load(complete_file_path)
+    ground_truth = pd.concat([prev_loaded_data, data_to_append])
+
+    pickle_manager = PickleManager()
+    pickle_manager.save(data_to_append, 'test_data', file_path, append_to_file=True)
+
+    loaded_data = joblib.load(complete_file_path)
+
+    check_numeric_inputs = np.allclose(loaded_data.iloc[:, :2], ground_truth.iloc[:, :2])
+    check_string_inputs = np.all(loaded_data.iloc[:, 2] == ground_truth.iloc[:, 2])
+
+    assert check_numeric_inputs, 'The numeric part of the data saved and the original numeric data are not the same'
+    assert check_string_inputs, 'The object part of the data saved and the original object data are not the same'
+
+    joblib.dump(prev_loaded_data, complete_file_path)
