@@ -79,3 +79,19 @@ def test_append_pickle_manager(file_managers_input_data):
     assert check_string_inputs, 'The object part of the data saved and the original object data are not the same'
 
     joblib.dump(prev_loaded_data, complete_file_path)
+
+
+def test_load_pickle_manager(file_managers_input_data):
+    file_path = file_managers_input_data['file_path']
+    complete_file_path = os.path.join(file_path, 'test_data.pkl')
+
+    ground_truth = joblib.load(complete_file_path)
+
+    pickle_manager = PickleManager()
+    loaded_data = pickle_manager.load('test_data.pkl', file_path)
+
+    check_numeric_inputs = np.allclose(loaded_data.iloc[:, :2], ground_truth.iloc[:, :2])
+    check_string_inputs = np.all(loaded_data.iloc[:, 2] == ground_truth.iloc[:, 2])
+
+    assert check_numeric_inputs, 'The numeric part of the data saved and the original numeric data are not the same'
+    assert check_string_inputs, 'The object part of the data saved and the original object data are not the same'
