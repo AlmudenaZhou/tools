@@ -90,6 +90,10 @@ class PickleManager(Manager):
         elif isinstance(prev_obj, tuple):
             new_obj = prev_obj + obj
 
+        elif isinstance(prev_obj, dict):
+            prev_obj.update(obj)
+            new_obj = prev_obj
+
         elif isinstance(prev_obj, np.ndarray):
             new_obj = np.concatenate([prev_obj, obj])
 
