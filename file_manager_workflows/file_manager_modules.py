@@ -107,7 +107,8 @@ class PickleManager(Manager):
         obj_type = type(obj)
         error_msg = f'The object at {complete_file_path} is type {prev_obj_type} while the new one you are ' \
                     f'passing is {obj_type}. Both must be the same to append it one to another.'
-        raise TypeError(error_msg)
+        if prev_obj_type != obj_type:
+            raise TypeError(error_msg)
 
     @staticmethod
     def _specific_load(complete_file_path):
