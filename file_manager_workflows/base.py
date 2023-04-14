@@ -52,7 +52,10 @@ class SaveWorkflow(ManagerWorkflow):
         super().__init__()
         self.model_config = {}
 
-    def save_models(self,  models_to_save: dict, file_path: Optional[str] = None, save_separated=True,
+    def _model_list_to_model_dict(self, models_to_save: list):
+        return {self.get_model_class_path_from_model(model).split('.')[-1]: model for model in models_to_save}
+
+    def save_models(self,  models_to_save: Union[dict, list], file_path: Optional[str] = None, save_separated=True,
                     append_file=True):
         """
         Saves the models included in the models_to_save in a pkl at file_path
@@ -60,11 +63,16 @@ class SaveWorkflow(ManagerWorkflow):
         If file_path is None it will be saved at the working directory
         :param models_to_save: dict with the model instance as value and the file_name as key. It can add a folder
         in the file_name as {folder_name}/{file_name}.
+        If it is a list, it will be considered as key the __name__ of the model.
         :param save_separated: It only used by the custom wrapped models with an attribute self._models
         If True, it will save each model at a separated file. Else, it will save the model all together.
         :param append_file: If True, if the file already exists it will be appended. If False, the content will
         be replaced
         """
+        if isinstance(models_to_save, list):
+            models_to_save = self._model_list_to_model_dict(models_to_save)
+            logging.info(f'Model list to: {models_to_save}')
+
         for file_name, model in models_to_save.items():
             model_class_path = self.get_model_class_path_from_model(model)
             class_name = model_class_path.split('.')[-1]
