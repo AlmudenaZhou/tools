@@ -1,10 +1,10 @@
 import logging
 import os
-from typing import Optional
+from typing import Optional, Union
 
 import pandas as pd
 
-from tools.file_manager_workflows.file_manager_modules import YamlManager, Manager
+from tools.file_manager_workflows.file_manager_modules import YamlManager
 from tools.misc import instance_class_from_module_and_name
 
 
@@ -30,8 +30,8 @@ class ManagerWorkflow:
 
     @staticmethod
     def get_file_name_and_path_of_model_config():
-        project_name = os.path.split(os.getcwd())[0]
-        file_name = f'{project_name}_model_config'
+        project_name = os.path.split(os.getcwd())[-1]
+        file_name = f'{project_name.lower()}_model_config'
         file_path = os.path.join('tools', 'file_manager_workflows', 'config_files')
         return file_name, file_path
 
