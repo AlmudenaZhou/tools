@@ -98,11 +98,11 @@ class SklearnTargetedTransformer(TargetedTransformer, ABC):
 
     def fit(self, x, y=None):
         self._array_column_names = []
-        self._encoders = {}
+        self._models = {}
         features = self._get_features(x)
 
         for feature in features:
-            self._encoders[feature] = self._individual_fit(x, feature)
+            self._models[feature] = self._individual_fit(x, feature)
         return self
 
     @abstractmethod

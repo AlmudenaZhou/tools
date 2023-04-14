@@ -31,7 +31,7 @@ class OneHotTargetedTransformer(SklearnTargetedTransformer):
         return super().transform(x)
 
     def _individual_transform(self, x, feature):
-        return self._encoders[feature].transform(x[[feature]])
+        return self._models[feature].transform(x[[feature]])
 
     def _get_array_column_names_from_model(self, model: Optional = None, model_name: str = ''):
         return [f'{model_name}__{self._clean_category_name(category)}' for category in model.categories_[0]]
@@ -77,7 +77,7 @@ class OrdinalTargetedTransformer(SklearnTargetedTransformer):
             return self._transform_data(x, feature)
 
     def _transform_data(self, x, feature):
-        return self._encoders[feature].transform(x[[feature]])
+        return self._models[feature].transform(x[[feature]])
 
     def _transform_data_with_nans(self, x, feature):
         """
@@ -89,5 +89,5 @@ class OrdinalTargetedTransformer(SklearnTargetedTransformer):
         else:
             unknown_value = np.nan
         transf_values = np.repeat(unknown_value, x.shape[0]).reshape(x.shape[0], 1)
-        transf_values[x[feature].notna()] = self._encoders[feature].transform(x.loc[x[feature].notna(), [feature]])
+        transf_values[x[feature].notna()] = self._models[feature].transform(x.loc[x[feature].notna(), [feature]])
         return transf_values
