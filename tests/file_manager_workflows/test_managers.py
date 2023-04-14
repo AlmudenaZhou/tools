@@ -32,6 +32,21 @@ def file_managers_input_data():
     return {'data': data, 'data_to_append': data_to_append, 'file_path': file_path}
 
 
+def check_are_equal_two_df_data(loaded_data, data):
+
+    assert loaded_data.shape == data.shape, 'Dataframes have different length.'
+    assert np.all(loaded_data.dtypes == loaded_data.dtypes), 'Dataframe have different types.'
+
+    numeric_columns = loaded_data.select_dtypes(include='number').columns
+    string_columns = loaded_data.select_dtypes(include='object').columns
+
+    check_numeric_inputs = np.allclose(loaded_data.loc[:, numeric_columns], data.loc[:, numeric_columns])
+    check_string_inputs = np.all(loaded_data.loc[:, string_columns] == data.loc[:, string_columns])
+
+    assert check_numeric_inputs, 'The numeric part of the loaded data and the original data are not the same.'
+    assert check_string_inputs, 'The object part of the loaded data and the original data are not the same.'
+
+
 def test_create_folder():
     file_path = os.path.join(os.path.dirname(__file__), 'test_files')
 
@@ -51,15 +66,7 @@ def save_manager_decorator(function):
 
         loaded_data, complete_file_path = function(file_managers_input_data, data, file_path)
 
-        numeric_columns = loaded_data.select_dtypes(include='number').columns
-        string_columns = loaded_data.select_dtypes(include='object').columns
-
-        check_numeric_inputs = np.allclose(loaded_data.loc[:, numeric_columns], data.loc[:, numeric_columns])
-        check_string_inputs = np.all(loaded_data.loc[:, string_columns] == data.loc[:, string_columns])
-
-        assert check_numeric_inputs, 'The numeric part of the loaded data and the original data are not the same.'
-        assert check_string_inputs, 'The object part of the loaded data and the original data are not the same.'
-
+        check_are_equal_two_df_data(loaded_data, data)
         os.remove(complete_file_path)
 
     return wrapper
