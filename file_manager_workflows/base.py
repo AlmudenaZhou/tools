@@ -33,6 +33,7 @@ class ManagerWorkflow:
         project_name = os.path.split(os.getcwd())[-1]
         file_name = f'{project_name.lower()}_model_config'
         file_path = os.path.join('tools', 'file_manager_workflows', 'config_files')
+        logging.info(f'Model config name: {file_name} \n Path model config: {file_path}')
         return file_name, file_path
 
     def change_manager_module(self, class_name):
