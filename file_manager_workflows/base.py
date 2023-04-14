@@ -92,11 +92,12 @@ class SaveWorkflow(ManagerWorkflow):
 
             assert is_custom, 'If save_separated=True, the model needs to be custom.'
 
+            file_path = os.path.join(file_path, file_name)
+
             for specific_model_name, model_to_save in model._models.items():
-                complete_model_name = f'{file_name}__{specific_model_name}'
-                self._add_model_to_model_config(model_class_path, complete_model_name, file_path, True, model_id,
+                self._add_model_to_model_config(model_class_path, specific_model_name, file_path, True, model_id,
                                                 specific_model_name)
-                self.manager_module.save(model_to_save, complete_model_name, file_path)
+                self.manager_module.save(model_to_save, specific_model_name, file_path)
 
         else:
             self._add_model_to_model_config(model_class_path, file_name, file_path, is_custom, model_id)
