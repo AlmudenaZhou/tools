@@ -39,7 +39,7 @@ class Manager(ABC):
         if file_path is not None:
             self.create_file_path(file_path)
 
-        if not append_to_file:
+        if not append_to_file or not os.path.exists(complete_file_path):
             self._specific_save(obj, complete_file_path)
         else:
             self._specific_append(obj, complete_file_path)
