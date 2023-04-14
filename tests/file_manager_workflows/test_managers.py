@@ -72,6 +72,21 @@ def save_manager_decorator(function):
     return wrapper
 
 
+def append_manager_decorator(function):
+    def wrapper(file_managers_input_data):
+        file_path = file_managers_input_data['file_path']
+        data = file_managers_input_data['data']
+        data_to_append = file_managers_input_data['data_to_append']
+
+        (loaded_data, prev_loaded_data,
+         ground_truth, complete_file_path) = function(file_managers_input_data, data, data_to_append, file_path)
+
+        check_are_equal_two_df_data(loaded_data, ground_truth)
+        joblib.dump(prev_loaded_data, complete_file_path)
+
+    return wrapper
+
+
 @save_manager_decorator
 def test_save_pickle_manager(file_managers_input_data, data, file_path):
     manager = PickleManager()
@@ -82,15 +97,13 @@ def test_save_pickle_manager(file_managers_input_data, data, file_path):
     return loaded_data, complete_file_path
 
 
-def test_append_pickle_manager(file_managers_input_data):
-
-    file_path = file_managers_input_data['file_path']
-    data_to_append = file_managers_input_data['data_to_append']
+@append_manager_decorator
+def test_append_pickle_manager(file_managers_input_data, data, data_to_append, file_path):
 
     complete_file_path = os.path.join(file_path, 'test_data.pkl')
 
     # It creates a new file to ensure the integrity of the data
-    joblib.dump(file_managers_input_data['data'], complete_file_path)
+    joblib.dump(data, complete_file_path)
 
     # Load the data that has been saved and saves the ground truth
     prev_loaded_data = joblib.load(complete_file_path)
@@ -101,13 +114,7 @@ def test_append_pickle_manager(file_managers_input_data):
 
     loaded_data = joblib.load(complete_file_path)
 
-    check_numeric_inputs = np.allclose(loaded_data.iloc[:, :2], ground_truth.iloc[:, :2])
-    check_string_inputs = np.all(loaded_data.iloc[:, 2] == ground_truth.iloc[:, 2])
-
-    assert check_numeric_inputs, 'The numeric part of the data saved and the original numeric data are not the same'
-    assert check_string_inputs, 'The object part of the data saved and the original object data are not the same'
-
-    joblib.dump(prev_loaded_data, complete_file_path)
+    return loaded_data, prev_loaded_data, ground_truth, complete_file_path
 
 
 def test_load_pickle_manager(file_managers_input_data):
@@ -142,29 +149,28 @@ def test_save_yaml_manager(file_managers_input_data, data, file_path):
     return loaded_data, complete_file_path
 
 
-def test_append_yaml_manager(file_managers_input_data):
+@append_manager_decorator
+def test_append_yaml_manager(file_managers_input_data, data, data_to_append, file_path):
 
-    file_path = file_managers_input_data['file_path']
-    data_to_append = file_managers_input_data['data_to_append']
+    prev_loaded_data = data
+    data_dict = data.T.to_dict()
+    data_to_append.index = range(prev_loaded_data.shape[0], prev_loaded_data.shape[0] + data_to_append.shape[0])
+    data_to_append_dict = data_to_append.T.to_dict()
 
-    complete_file_path = os.path.join(file_path, 'test_data.pkl')
+    complete_file_path = os.path.join(file_path, 'test_data.yaml')
 
     # It creates a new file to ensure the integrity of the data
-    joblib.dump(file_managers_input_data['data'], complete_file_path)
+    with open(complete_file_path, "w") as file:
+        yaml.dump(data_dict, file)
 
-    # Load the data that has been saved and saves the ground truth
-    prev_loaded_data = joblib.load(complete_file_path)
+    manager = YamlManager()
+    manager.save(data_to_append_dict, 'test_data', file_path, append_to_file=True)
+
     ground_truth = pd.concat([prev_loaded_data, data_to_append])
 
-    pickle_manager = PickleManager()
-    pickle_manager.save(data_to_append, 'test_data', file_path, append_to_file=True)
+    with open(complete_file_path, "r") as file:
+        loaded_data = yaml.safe_load(file)
 
-    loaded_data = joblib.load(complete_file_path)
+    loaded_data = pd.DataFrame(loaded_data).T
 
-    check_numeric_inputs = np.allclose(loaded_data.iloc[:, :2], ground_truth.iloc[:, :2])
-    check_string_inputs = np.all(loaded_data.iloc[:, 2] == ground_truth.iloc[:, 2])
-
-    assert check_numeric_inputs, 'The numeric part of the data saved and the original numeric data are not the same'
-    assert check_string_inputs, 'The object part of the data saved and the original object data are not the same'
-
-    joblib.dump(prev_loaded_data, complete_file_path)
+    return loaded_data, prev_loaded_data, ground_truth, complete_file_path
