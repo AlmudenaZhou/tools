@@ -37,9 +37,13 @@ class ManagerWorkflow:
         return file_name, file_path
 
     def change_manager_module(self, class_name):
-        manager_name = self.manager_config_file[class_name]
-        module_path = 'tools.file_manager_workflows.file_manager_modules'
-        self.manager_module = instance_class_from_module_and_name(module_path, manager_name)
+        if class_name in self.manager_config_file:
+            manager_name = self.manager_config_file[class_name]
+            module_path = 'tools.file_manager_workflows.file_manager_modules'
+            self.manager_module = instance_class_from_module_and_name(module_path, manager_name)
+            logging.info(f'Manager module changed to: {manager_name}')
+        else:
+            logging.warning(f'The model {class_name} you are trying to save is not in the config file')
 
 
 class SaveWorkflow(ManagerWorkflow):
