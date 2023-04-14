@@ -9,6 +9,15 @@ import yaml
 from tools.file_manager_workflows.file_manager_modules import PickleManager, Manager, YamlManager
 
 
+"""
+TODOS: 
+- Acabar de implementar el first approach de los decorators
+- Pasar las cargas de ground truth a la librería de pickle en vez de la de joblib por no usar exactamente
+lo mismo que en el otro lado
+- Meter en los tests unitarios que se pueda cambiar vía parámetro qué tipo de dato guardar para cada test
+"""
+
+
 @pytest.fixture
 def file_managers_input_data():
     dtypes_by_column = {'a': float, 'b': int, 'c': str}
@@ -35,23 +44,35 @@ def test_create_folder():
     os.rmdir(file_path)
 
 
-def test_save_pickle_manager(file_managers_input_data):
-    file_path = file_managers_input_data['file_path']
-    data = file_managers_input_data['data']
+def save_manager_decorator(function):
+    def wrapper(file_managers_input_data):
+        file_path = file_managers_input_data['file_path']
+        data = file_managers_input_data['data']
 
-    pickle_manager = PickleManager()
-    pickle_manager.save(data, 'test_saved_data', file_path)
+        loaded_data, complete_file_path = function(file_managers_input_data, data, file_path)
 
+        numeric_columns = loaded_data.select_dtypes(include='number').columns
+        string_columns = loaded_data.select_dtypes(include='object').columns
+
+        check_numeric_inputs = np.allclose(loaded_data.loc[:, numeric_columns], data.loc[:, numeric_columns])
+        check_string_inputs = np.all(loaded_data.loc[:, string_columns] == data.loc[:, string_columns])
+
+        assert check_numeric_inputs, 'The numeric part of the loaded data and the original data are not the same.'
+        assert check_string_inputs, 'The object part of the loaded data and the original data are not the same.'
+
+        os.remove(complete_file_path)
+
+    return wrapper
+
+
+@save_manager_decorator
+def test_save_pickle_manager(file_managers_input_data, data, file_path):
+    manager = PickleManager()
     complete_file_path = os.path.join(file_path, 'test_saved_data.pkl')
+    manager.save(data, 'test_saved_data', file_path)
+
     loaded_data = joblib.load(complete_file_path)
-
-    check_numeric_inputs = np.allclose(loaded_data.iloc[:, :2], data.iloc[:, :2])
-    check_string_inputs = np.all(loaded_data.iloc[:, 2] == data.iloc[:, 2])
-
-    assert check_numeric_inputs, 'The numeric part of the data saved and the original numeric data are not the same'
-    assert check_string_inputs, 'The object part of the data saved and the original object data are not the same'
-
-    os.remove(complete_file_path)
+    return loaded_data, complete_file_path
 
 
 def test_append_pickle_manager(file_managers_input_data):
@@ -98,10 +119,8 @@ def test_load_pickle_manager(file_managers_input_data):
     assert check_string_inputs, 'The object part of the data saved and the original object data are not the same'
 
 
-def test_save_yaml_manager(file_managers_input_data, data):
-    file_path = file_managers_input_data['file_path']
-    data = file_managers_input_data['data']
-
+@save_manager_decorator
+def test_save_yaml_manager(file_managers_input_data, data, file_path):
     data = data.to_dict()
 
     manager = YamlManager()
@@ -112,16 +131,8 @@ def test_save_yaml_manager(file_managers_input_data, data):
     with open(complete_file_path, "r") as file:
         loaded_data = yaml.safe_load(file)
 
-    numeric_columns = loaded_data.select_dtypes(include='number').columns
-    string_columns = loaded_data.select_dtypes(include='object').columns
-
-    check_numeric_inputs = np.allclose(loaded_data.loc[:, numeric_columns], data.loc[:, numeric_columns])
-    check_string_inputs = np.all(loaded_data.loc[:, string_columns] == data.loc[:, string_columns])
-
-    assert check_numeric_inputs, 'The numeric part of the loaded data and the original data are not the same.'
-    assert check_string_inputs, 'The object part of the loaded data and the original data are not the same.'
-
-    os.remove(complete_file_path)
+    loaded_data = pd.DataFrame(loaded_data)
+    return loaded_data, complete_file_path
 
 
 def test_append_yaml_manager(file_managers_input_data):
