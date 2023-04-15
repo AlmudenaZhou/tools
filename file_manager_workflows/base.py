@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 import pandas as pd
 
-from tools.file_manager_workflows.file_manager_modules import YamlManager
+from tools.file_manager_workflows.file_manager_modules import YamlManager, Manager
 from tools.misc import instance_class_from_module_and_name
 
 
@@ -25,7 +25,7 @@ class ManagerWorkflow:
         yaml_manager = YamlManager()
         cwd = os.getcwd()
         config_file_path = os.path.join(cwd, 'tools', 'file_manager_workflows', 'config_files')
-        config_file = yaml_manager.load('model_manager_mapping', config_file_path)
+        config_file = yaml_manager.load(file_name='model_manager_mapping', file_path=config_file_path)
         return config_file
 
     @staticmethod
@@ -83,7 +83,7 @@ class SaveWorkflow(ManagerWorkflow):
             logging.info(f'Saving {file_name}')
             model_class_path = self.get_model_class_path_from_model(model)
             class_name = model_class_path.split('.')[-1]
-            self.change_manager_module(class_name)
+            self.change_manager_module(class_name, save_separated)
             file_name_path = os.path.split(file_name)
             if len(file_name_path) > 1:
                 file_name = file_name_path[-1]
@@ -105,11 +105,11 @@ class SaveWorkflow(ManagerWorkflow):
             for specific_model_name, model_to_save in model._models.items():
                 self._add_model_to_model_config(model_class_path, specific_model_name, file_path, True, model_id,
                                                 specific_model_name)
-                self.manager_module.save(model_to_save, specific_model_name, file_path)
+                self.manager_module.save(model_to_save, raw_file_name=specific_model_name, file_path=file_path)
 
         else:
             self._add_model_to_model_config(model_class_path, file_name, file_path, is_custom, model_id)
-            self.manager_module.save(model, file_name, file_path)
+            self.manager_module.save(model, raw_file_name=file_name, file_path=file_path)
 
     def _add_model_to_model_config(self, model_class_path, file_name, file_path, is_custom, model_id, model_name=None):
         """
@@ -169,7 +169,7 @@ class LoadWorkflow(ManagerWorkflow):
     @staticmethod
     def _load_config_file():
         file_name, file_path = LoadWorkflow.get_file_name_and_path_of_model_config()
-        model_config = YamlManager().load(file_name, file_path)
+        model_config = YamlManager().load(file_name=file_name, file_path=file_path)
         return model_config
 
     def load_models(self):
@@ -189,29 +189,22 @@ class LoadWorkflow(ManagerWorkflow):
 
         return loaded_models
 
-    def _load_model_by_id(self, model_config_by_id):
+    @staticmethod
+    def _load_model_by_id(model_config_by_id):
         model_names = model_config_by_id['model_name']
         model_class_path = model_config_by_id['model_class_path'].unique()[0]
         class_name = model_class_path.split('.')[-1]
 
-        self.change_manager_module(class_name)
-
         if None not in model_names:
             model_path = '.'.join(model_class_path.split('.')[:-1])
             model_instance = instance_class_from_module_and_name(model_path, class_name)
-            model_instance._models = {model_name: self._load_from_manager_module_with_complete_file_path(comp_file_path)
+            model_instance._models = {model_name: Manager.load(complete_file_path=comp_file_path)
                                       for comp_file_path, model_name in zip(model_config_by_id.index, model_names)}
             return model_instance
 
         else:
             assert model_config_by_id.shape[0], 'If there is a None in model names, it can only have saved one model.'
-            return self._load_from_manager_module_with_complete_file_path(model_config_by_id.index[0])
-
-    def _load_from_manager_module_with_complete_file_path(self, complete_file_path):
-        split_file_path = os.path.split(complete_file_path)
-        raw_file_name = split_file_path[-1]
-        file_path = os.path.join(*split_file_path[:-1])
-        self.manager_module.load(raw_file_name, file_path)
+            return Manager.load(complete_file_path=model_config_by_id.index[0])
 
     @staticmethod
     def _check_model_config_integrity_by_id(model_config_by_id):

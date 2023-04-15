@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -9,9 +10,18 @@ import pandas as pd
 import yaml
 
 
+def load_manager_extension_mapping():
+    complete_file_path = os.path.join('tools', 'file_manager_workflows', 'config_files',
+                                      'manager_extension_mapping.yaml')
+    with open(complete_file_path, "r") as file:
+        manager_extension_mapping = yaml.safe_load(file)
+    return manager_extension_mapping
+
+
 class Manager(ABC):
 
     _extension: str
+    _manager_extension_mapping = load_manager_extension_mapping()
 
     @classmethod
     def get_complete_file_path(cls, raw_file_name, file_path):
@@ -33,8 +43,13 @@ class Manager(ABC):
             os.makedirs(file_path)
             logging.info(f'{file_path} was created')
 
-    def save(self, obj, raw_file_name, file_path: Optional[str] = None, append_to_file=False):
-        complete_file_path = self.get_complete_file_path(raw_file_name, file_path)
+    def save(self, obj, complete_file_path: Optional[str] = None, raw_file_name: Optional[str] = None,
+             file_path: Optional[str] = None, append_to_file=False):
+
+        if raw_file_name is not None:
+            complete_file_path = self.get_complete_file_path(raw_file_name, file_path)
+        elif complete_file_path is None:
+            raise NameError('raw_complete_file_path or raw_file_name must have a value')
 
         if file_path is not None:
             self.create_file_path(file_path)
@@ -45,10 +60,28 @@ class Manager(ABC):
             self._specific_append(obj, complete_file_path)
         logging.info(f'{complete_file_path} was saved')
 
-    def load(self, raw_file_name, file_path: Optional[str] = None):
-        complete_file_path = self.get_complete_file_path(raw_file_name, file_path)
-        obj = self._specific_load(complete_file_path)
+    @classmethod
+    def load(cls, complete_file_path: Optional[str] = None, file_name: Optional[str] = None,
+             file_path: Optional[str] = None):
+
+        if file_name is not None:
+            complete_file_path = cls.get_complete_file_path(file_name, file_path)
+
+        elif complete_file_path is None:
+            raise NameError('complete_file_path or file_name must have a value')
+
+        if isinstance(cls, Manager):
+            extension = complete_file_path.split('.')[-1]
+            manager = Manager._find_load_manager(extension)
+            obj = manager._specific_load(complete_file_path)
+        else:
+            obj = cls._specific_load(complete_file_path)
         return obj
+
+    @staticmethod
+    def _find_load_manager(extension):
+        manager = getattr(sys.modules[__name__], Manager._manager_extension_mapping[extension])
+        return manager()
 
     @staticmethod
     @abstractmethod
