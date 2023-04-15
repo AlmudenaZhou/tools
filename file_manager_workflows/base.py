@@ -32,7 +32,8 @@ class ManagerWorkflow:
     def get_file_name_and_path_of_model_config():
         project_name = os.path.split(os.getcwd())[-1]
         file_name = f'{project_name.lower()}_model_config'
-        file_path = os.path.join('tools', 'file_manager_workflows', 'config_files')
+        cwd = os.getcwd()
+        file_path = os.path.join(cwd, 'tools', 'file_manager_workflows', 'config_files')
         logging.info(f'Model config name: {file_name} \n Path model config: {file_path}')
         return file_name, file_path
 

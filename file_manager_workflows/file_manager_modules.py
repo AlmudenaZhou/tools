@@ -11,7 +11,8 @@ import yaml
 
 
 def load_manager_extension_mapping():
-    complete_file_path = os.path.join('tools', 'file_manager_workflows', 'config_files',
+    cwd = os.getcwd()
+    complete_file_path = os.path.join(cwd, 'tools', 'file_manager_workflows', 'config_files',
                                       'manager_extension_mapping.yaml')
     with open(complete_file_path, "r") as file:
         manager_extension_mapping = yaml.safe_load(file)
