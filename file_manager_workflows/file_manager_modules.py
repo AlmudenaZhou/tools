@@ -71,7 +71,7 @@ class Manager(ABC):
         elif complete_file_path is None:
             raise NameError('complete_file_path or file_name must have a value')
 
-        if isinstance(cls, Manager):
+        if cls.__name__ == 'Manager':
             extension = complete_file_path.split('.')[-1]
             manager = Manager._find_load_manager(extension)
             obj = manager._specific_load(complete_file_path)
