@@ -62,7 +62,7 @@ class SaveWorkflow(ManagerWorkflow):
             logging.warning(f'The model {class_name} you are trying to save is not in the config file')
 
     def save_models(self,  models_to_save: Union[dict, list], file_path: Optional[str] = None, save_separated=True,
-                    append_file=True):
+                    append_to_file=True):
         """
         Saves the models included in the models_to_save in a pkl at file_path
         :param file_path: path where the models will be saved.
@@ -72,7 +72,7 @@ class SaveWorkflow(ManagerWorkflow):
         If it is a list, it will be considered as key the __name__ of the model.
         :param save_separated: It only used by the custom wrapped models with an attribute self._models
         If True, it will save each model at a separated file. Else, it will save the model all together.
-        :param append_file: If True, if the file already exists it will be appended. If False, the content will
+        :param append_to_file: If True, if the file already exists it will be appended. If False, the content will
         be replaced
         """
         if isinstance(models_to_save, list):
@@ -80,6 +80,7 @@ class SaveWorkflow(ManagerWorkflow):
             logging.info(f'Model list to: {models_to_save}')
 
         for file_name, model in models_to_save.items():
+            logging.info(f'Saving {file_name}')
             model_class_path = self.get_model_class_path_from_model(model)
             class_name = model_class_path.split('.')[-1]
             self.change_manager_module(class_name)
@@ -87,8 +88,9 @@ class SaveWorkflow(ManagerWorkflow):
             if len(file_name_path) > 1:
                 file_name = file_name_path[-1]
                 file_path = os.path.join(file_path, *file_name_path[:-1])
-            self._save_model(model, file_name, file_path, save_separated)
-        self._save_config_file(append_file)
+            if self.manager_module is not None:
+                self._save_model(model, file_name, file_path, save_separated)
+        self._save_config_file(append_to_file)
 
     def _save_model(self, model, file_name, file_path, save_separated):
         model_class_path = self.get_model_class_path_from_model(model)
@@ -137,16 +139,17 @@ class SaveWorkflow(ManagerWorkflow):
         }
         logging.info(f'Added {model_class_path} at {complete_file_path} to config file')
 
-    def _save_config_file(self, append_file=True):
+    def _save_config_file(self, append_to_file=True):
         """
         It will save a file named {project_name}_model_config.yaml. It will be saved at
         tools/file_manager_workflows/config_files.
 
-        :param append_file: If True, if the file already exists it will be appended. If False, the content will
+        :param append_to_file: If True, if the file already exists it will be appended. If False, the content will
         be replaced. By default is True
         """
         file_name, file_path = self.get_file_name_and_path_of_model_config()
-        YamlManager().save(self.model_config, file_name, file_path, append_file)
+        YamlManager().save(self.model_config, raw_file_name=file_name, file_path=file_path,
+                           append_to_file=append_to_file)
 
 
 class LoadWorkflow(ManagerWorkflow):
