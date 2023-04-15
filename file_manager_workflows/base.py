@@ -36,15 +36,6 @@ class ManagerWorkflow:
         logging.info(f'Model config name: {file_name} \n Path model config: {file_path}')
         return file_name, file_path
 
-    def change_manager_module(self, class_name):
-        if class_name in self.manager_config_file:
-            manager_name = self.manager_config_file[class_name]
-            module_path = 'tools.file_manager_workflows.file_manager_modules'
-            self.manager_module = instance_class_from_module_and_name(module_path, manager_name)
-            logging.info(f'Manager module changed to: {manager_name}')
-        else:
-            logging.warning(f'The model {class_name} you are trying to save is not in the config file')
-
 
 class SaveWorkflow(ManagerWorkflow):
 
@@ -54,6 +45,21 @@ class SaveWorkflow(ManagerWorkflow):
 
     def _model_list_to_model_dict(self, models_to_save: list):
         return {self.get_model_class_path_from_model(model).split('.')[-1]: model for model in models_to_save}
+
+    def change_manager_module(self, class_name, save_separated):
+        if class_name in self.manager_config_file:
+            manager_info = self.manager_config_file[class_name]
+
+            manager_name = manager_info
+            if isinstance(manager_info, dict):
+                manager_name = manager_info['separated'] if save_separated else manager_info['no_separated']
+
+            module_path = 'tools.file_manager_workflows.file_manager_modules'
+            self.manager_module = instance_class_from_module_and_name(module_path, manager_name)
+            logging.info(f'Manager module changed to: {manager_name}')
+        else:
+            self.manager_module = None
+            logging.warning(f'The model {class_name} you are trying to save is not in the config file')
 
     def save_models(self,  models_to_save: Union[dict, list], file_path: Optional[str] = None, save_separated=True,
                     append_file=True):
