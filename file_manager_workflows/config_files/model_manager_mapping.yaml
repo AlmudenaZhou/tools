@@ -1,2 +1,3 @@
 # File with the mapping model class name to the load save module
 OneHotTargetedTransformer: PickleManager
+OrdinalTargetedTransformer: PickleManager
