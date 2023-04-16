@@ -4,12 +4,12 @@ from typing import Optional
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 
-from tools.transformations.base import SklearnTargetedTransformer
+from tools.models.transformations.base import SklearnTargetedTransformer
 
 
 class OneHotTargetedTransformer(SklearnTargetedTransformer):
 
-    def __init__(self, columns_to_apply, **model_kwargs):
+    def __init__(self, columns_to_apply=None, **model_kwargs):
         super().__init__(columns_to_apply, **model_kwargs)
 
     def fit(self, x, y=None):
@@ -39,7 +39,7 @@ class OneHotTargetedTransformer(SklearnTargetedTransformer):
 
 class OrdinalTargetedTransformer(SklearnTargetedTransformer):
 
-    def __init__(self, ordered_labels, columns_to_apply=None, **model_kwargs):
+    def __init__(self, ordered_labels=None, columns_to_apply=None, **model_kwargs):
         super().__init__(columns_to_apply, **model_kwargs)
         self._ordered_labels = ordered_labels
 
@@ -57,6 +57,9 @@ class OrdinalTargetedTransformer(SklearnTargetedTransformer):
             return self._fit_model(x, feature)
 
     def _fit_model(self, x, feature):
+        if self._ordered_labels is None:
+            raise ValueError('If you want to fit the model, you must specify the _ordered_labels.')
+
         return OrdinalEncoder(categories=[self._ordered_labels[feature]],
                               **self._model_kwargs).fit(x[[feature]])
 
@@ -91,3 +94,14 @@ class OrdinalTargetedTransformer(SklearnTargetedTransformer):
         transf_values = np.repeat(unknown_value, x.shape[0]).reshape(x.shape[0], 1)
         transf_values[x[feature].notna()] = self._models[feature].transform(x.loc[x[feature].notna(), [feature]])
         return transf_values
+
+    def _set_mandatory_attributes_from_models(self):
+        self._set_ordered_labels()
+
+    def _set_ordered_labels(self):
+        if len(self._models.values()) == 0:
+            raise ValueError('_models attribute cannot be empty')
+
+        self._ordered_labels = {}
+        for model_name, model in self._models.items():
+            self._ordered_labels[model_name] = model.categories[0]
