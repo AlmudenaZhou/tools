@@ -6,18 +6,28 @@ import numpy as np
 from sklearn.base import TransformerMixin
 
 
-class TargetedTransformer(TransformerMixin):
+class ModelExtendedManager(ABC):
+
+    def __init__(self, models=None, mandatory_attr_only=False, **kwargs):
+        self._models = None
+        self._start_from_model(models, mandatory_attr_only)
+
+    @abstractmethod
+    def _start_from_model(self, models, mandatory_attr_only=False):
+        pass
+
+
+class TargetedTransformer(ModelExtendedManager, TransformerMixin):
     """
     Dummy class that allows us to modify only the methods that interest us,
     avoiding redundancy.
     """
 
     def __init__(self, columns_to_apply=None, models=None, mandatory_attr_only=False, **model_kwargs):
+        ModelExtendedManager.__init__(self, models, mandatory_attr_only)
         self._columns_to_apply = columns_to_apply
         self._model_kwargs = model_kwargs
         self._array_column_names = []
-        self._models = None
-        self._start_from_model(models, mandatory_attr_only)
 
     def _get_features(self, x):
         return x.columns if self._columns_to_apply is None else self._columns_to_apply
