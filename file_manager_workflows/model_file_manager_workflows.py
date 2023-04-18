@@ -103,6 +103,9 @@ class SaveWorkflow(ManagerWorkflow):
 
             file_path = os.path.join(file_path, file_name)
 
+            assert not hasattr(model, ''), 'If save_separated = True, the model needs the _models attribute'
+            assert not isinstance(model._models, dict), 'If save_separated = True, the model._models needs to be a dict'
+
             for specific_model_name, model_to_save in model._models.items():
                 self._add_model_to_model_config(model_class_path, specific_model_name, file_path, True, model_id,
                                                 specific_model_name)
