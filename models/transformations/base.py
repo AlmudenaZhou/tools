@@ -17,7 +17,7 @@ class ModelExtendedManager(ABC):
         pass
 
 
-class TargetedTransformer(ModelExtendedManager, TransformerMixin):
+class TargetedTransformer(TransformerMixin, ModelExtendedManager):
     """
     Dummy class that allows us to modify only the methods that interest us,
     avoiding redundancy.
