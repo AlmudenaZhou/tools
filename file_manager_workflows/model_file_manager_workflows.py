@@ -44,9 +44,6 @@ class SaveWorkflow(ManagerWorkflow):
         super().__init__()
         self.model_config = {}
 
-    def _model_list_to_model_dict(self, models_to_save: list):
-        return {self.get_model_class_path_from_model(model).split('.')[-1]: model for model in models_to_save}
-
     def change_manager_module(self, class_name, save_separated):
         if class_name in self.manager_config_file:
             manager_info = self.manager_config_file[class_name]
@@ -62,25 +59,30 @@ class SaveWorkflow(ManagerWorkflow):
             self.manager_module = None
             logging.warning(f'The model {class_name} you are trying to save is not in the config file')
 
-    def save_models(self,  models_to_save: Union[dict, list], file_path: Optional[str] = None, save_separated=True,
+    def save_models(self,  models_to_save: list, file_path: Optional[str] = None, save_separated=True,
                     append_to_file=True):
         """
         Saves the models included in the models_to_save in a pkl at file_path
         :param file_path: path where the models will be saved.
         If file_path is None it will be saved at the working directory
-        :param models_to_save: dict with the model instance as value and the file_name as key. It can add a folder
-        in the file_name as {folder_name}/{file_name}.
-        If it is a list, it will be considered as key the __name__ of the model.
+        :param models_to_save: list in which each element is a dictionary with the model at the key "model" and the
+        file_name at the key file_name or the model itself. It can add a folder in the file_name as
+        {folder_name}/{file_name}. Also, metadata can be added as extra parameters of the model.
+        If there is no "file_name", it will be considered as the key the __name__ of the model.
+        You can have models alone and dictionaries mixed in the list
         :param save_separated: It only used by the custom wrapped models with an attribute self._models
         If True, it will save each model at a separated file. Else, it will save the model all together.
         :param append_to_file: If True, if the file already exists it will be appended. If False, the content will
         be replaced
         """
-        if isinstance(models_to_save, list):
-            models_to_save = self._model_list_to_model_dict(models_to_save)
-            logging.info(f'Model list to: {models_to_save}')
 
-        for file_name, model in models_to_save.items():
+        for model_info in models_to_save:
+            if isinstance(model_info, dict):
+                model = model_info['model']
+            else:
+                model = model_info
+                model_info = {}
+            file_name = model_info.get('file_name', self.get_model_class_path_from_model(model).split('.')[-1])
             logging.info(f'Saving {file_name}')
             model_class_path = self.get_model_class_path_from_model(model)
             class_name = model_class_path.split('.')[-1]
@@ -90,10 +92,12 @@ class SaveWorkflow(ManagerWorkflow):
                 file_name = file_name_path[-1]
                 file_path = os.path.join(file_path, *file_name_path[:-1])
             if self.manager_module is not None:
-                self._save_model(model, file_name, file_path, save_separated)
+                filtered_model_info = {key: model_info[key] for key in model_info.keys()
+                                       if key not in ['model', 'file_name']}
+                self._save_model(model, file_name, file_path, save_separated, **filtered_model_info)
         self._save_config_file(append_to_file)
 
-    def _save_model(self, model, file_name, file_path, save_separated):
+    def _save_model(self, model, file_name, file_path, save_separated, **kwargs):
         model_class_path = self.get_model_class_path_from_model(model)
         model_id = id(model)
         is_custom = '_models' in model.__dict__.keys()
@@ -108,14 +112,15 @@ class SaveWorkflow(ManagerWorkflow):
 
             for specific_model_name, model_to_save in model._models.items():
                 self._add_model_to_model_config(model_class_path, specific_model_name, file_path, True, model_id,
-                                                specific_model_name)
+                                                specific_model_name, **kwargs)
                 self.manager_module.save(model_to_save, raw_file_name=specific_model_name, file_path=file_path)
 
         else:
-            self._add_model_to_model_config(model_class_path, file_name, file_path, is_custom, model_id)
+            self._add_model_to_model_config(model_class_path, file_name, file_path, is_custom, model_id, **kwargs)
             self.manager_module.save(model, raw_file_name=file_name, file_path=file_path)
 
-    def _add_model_to_model_config(self, model_class_path, file_name, file_path, is_custom, model_id, model_name=None):
+    def _add_model_to_model_config(self, model_class_path, file_name, file_path, is_custom, model_id, model_name=None,
+                                   **kwargs):
         """
         It creates a file with a structure as follows:
 
@@ -141,6 +146,13 @@ class SaveWorkflow(ManagerWorkflow):
             'model_id': model_id,
             'custom': is_custom
         }
+
+        mandatory_keys_at_save_file = self.model_config[complete_file_path].keys()
+
+        if len(set(kwargs.keys()).intersection(set(mandatory_keys_at_save_file))) != 0:
+            raise ValueError(f'Cannot use: {mandatory_keys_at_save_file} at the metadata keys of the model ')
+
+        self.model_config[complete_file_path].update(kwargs)
         logging.info(f'Added {model_class_path} at {complete_file_path} to config file')
 
     def _save_config_file(self, append_to_file=True):
