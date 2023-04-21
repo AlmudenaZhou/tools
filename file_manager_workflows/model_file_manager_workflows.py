@@ -188,7 +188,7 @@ class LoadWorkflow(ManagerWorkflow):
         model_config = YamlManager().load(file_name=file_name, file_path=file_path)
         return model_config
 
-    def load_models(self):
+    def load_models(self, config_attr_as_model_key='model_id'):
         """
         Loads the models at the instance, specified in models_to_load that are in file_path
         :return: dictionary with the models loaded
@@ -201,8 +201,12 @@ class LoadWorkflow(ManagerWorkflow):
         for model_id in model_config['model_id'].unique():
             model_config_by_id = model_config[model_config['model_id'] == model_id]
             self._check_model_config_integrity_by_id(model_config_by_id)
-            loaded_models[model_id] = self._load_model_by_id(model_config_by_id)
-
+            config_attr = model_config_by_id[config_attr_as_model_key].iloc[0]
+            loaded_model = LoadWorkflow._load_model_by_id(model_config_by_id)
+            if config_attr not in loaded_models.keys():
+                loaded_models[config_attr] = [loaded_model]
+            else:
+                loaded_models[config_attr].append(loaded_model)
         return loaded_models
 
     @staticmethod
