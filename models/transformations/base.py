@@ -63,7 +63,7 @@ class TargetedTransformer(TransformerMixin, ModelExtendedManager):
 
     def _set_optional_attributes_from_models(self):
         self._array_column_names = []
-        for model_name, model in self._models:
+        for model_name, model in self._models.items():
             self._array_column_names.extend(self._get_array_column_names_from_model(model, model_name))
 
     @staticmethod
