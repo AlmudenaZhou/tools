@@ -40,8 +40,8 @@ class OneHotTargetedTransformer(SklearnTargetedTransformer):
 class OrdinalTargetedTransformer(SklearnTargetedTransformer):
 
     def __init__(self, ordered_labels=None, columns_to_apply=None, **model_kwargs):
-        super().__init__(columns_to_apply, **model_kwargs)
         self._ordered_labels = ordered_labels
+        super().__init__(columns_to_apply, **model_kwargs)
 
     def fit(self, x, y=None):
         return super().fit(x)
@@ -96,6 +96,7 @@ class OrdinalTargetedTransformer(SklearnTargetedTransformer):
         return transf_values
 
     def _set_mandatory_attributes_from_models(self):
+        super()._set_mandatory_attributes_from_models()
         self._set_ordered_labels()
 
     def _set_ordered_labels(self):

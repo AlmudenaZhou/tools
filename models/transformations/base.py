@@ -43,10 +43,10 @@ class TargetedTransformer(TransformerMixin, ModelExtendedManager):
     """
 
     def __init__(self, columns_to_apply=None, models=None, mandatory_attr_only=False, **model_kwargs):
-        ModelExtendedManager.__init__(self, models, mandatory_attr_only)
         self._columns_to_apply = columns_to_apply
         self._model_kwargs = model_kwargs
         self._array_column_names = []
+        ModelExtendedManager.__init__(self, models, mandatory_attr_only)
 
     def _get_features(self, x):
         return x.columns if self._columns_to_apply is None else self._columns_to_apply
