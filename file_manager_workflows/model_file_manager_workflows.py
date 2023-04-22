@@ -217,9 +217,9 @@ class LoadWorkflow(ManagerWorkflow):
 
         if None not in model_names:
             model_path = '.'.join(model_class_path.split('.')[:-1])
-            model_instance = instance_class_from_module_and_name(model_path, class_name)
-            model_instance._models = {model_name: Manager.load(complete_file_path=comp_file_path)
-                                      for comp_file_path, model_name in zip(model_config_by_id.index, model_names)}
+            models = {model_name: Manager.load(complete_file_path=comp_file_path)
+                      for comp_file_path, model_name in zip(model_config_by_id.index, model_names)}
+            model_instance = instance_class_from_module_and_name(model_path, class_name, models=models)
             return model_instance
 
         else:
