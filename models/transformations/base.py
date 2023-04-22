@@ -59,7 +59,7 @@ class TargetedTransformer(TransformerMixin, ModelExtendedManager):
         pass
 
     def _set_mandatory_attributes_from_models(self):
-        pass
+        self._columns_to_apply = list(self._models.keys())
 
     def _set_optional_attributes_from_models(self):
         self._array_column_names = []
