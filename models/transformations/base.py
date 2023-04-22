@@ -8,9 +8,10 @@ from sklearn.base import TransformerMixin
 
 class ModelExtendedManager(ABC):
 
-    def __init__(self, models=None, mandatory_attr_only=False, **kwargs):
+    def __init__(self, models=None, mandatory_attr_only=False, **model_kwargs):
         self._models = None
         self._start_from_model(models, mandatory_attr_only)
+        self._model_kwargs = model_kwargs
 
     def _start_from_model(self, models, mandatory_attr_only=False):
         self._models = {}
@@ -44,9 +45,8 @@ class TargetedTransformer(TransformerMixin, ModelExtendedManager):
 
     def __init__(self, columns_to_apply=None, models=None, mandatory_attr_only=False, **model_kwargs):
         self._columns_to_apply = columns_to_apply
-        self._model_kwargs = model_kwargs
         self._array_column_names = []
-        ModelExtendedManager.__init__(self, models, mandatory_attr_only)
+        ModelExtendedManager.__init__(self, models, mandatory_attr_only, **model_kwargs)
 
     def _get_features(self, x):
         return x.columns if self._columns_to_apply is None else self._columns_to_apply
