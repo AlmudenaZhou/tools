@@ -9,8 +9,9 @@ from tools.models.transformations.base import SklearnTargetedTransformer
 
 class OneHotTargetedTransformer(SklearnTargetedTransformer):
 
-    def __init__(self, columns_to_apply=None, **model_kwargs):
-        super().__init__(columns_to_apply, **model_kwargs)
+    def __init__(self, columns_to_apply=None, models=None, mandatory_attr_only=False, extra_information=None,
+                 **model_kwargs):
+        super().__init__(columns_to_apply, models, mandatory_attr_only, extra_information, **model_kwargs)
 
     def fit(self, x, y=None):
         return super().fit(x)
@@ -39,9 +40,10 @@ class OneHotTargetedTransformer(SklearnTargetedTransformer):
 
 class OrdinalTargetedTransformer(SklearnTargetedTransformer):
 
-    def __init__(self, ordered_labels=None, columns_to_apply=None, **model_kwargs):
+    def __init__(self, ordered_labels=None, columns_to_apply=None, models=None, mandatory_attr_only=False,
+                 extra_information=None, **model_kwargs):
         self._ordered_labels = ordered_labels
-        super().__init__(columns_to_apply, **model_kwargs)
+        super().__init__(columns_to_apply, models, mandatory_attr_only, extra_information, **model_kwargs)
 
     def fit(self, x, y=None):
         return super().fit(x)

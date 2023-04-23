@@ -8,10 +8,11 @@ from sklearn.base import TransformerMixin
 
 class ModelExtendedManager(ABC):
 
-    def __init__(self, models=None, mandatory_attr_only=False, **model_kwargs):
+    def __init__(self, models=None, mandatory_attr_only=False, extra_information=None, **model_kwargs):
         self._models = None
         self._start_from_model(models, mandatory_attr_only)
         self._model_kwargs = model_kwargs
+        self.extra_information = extra_information
 
     def _start_from_model(self, models, mandatory_attr_only=False):
         self._models = {}
@@ -43,10 +44,11 @@ class TargetedTransformer(TransformerMixin, ModelExtendedManager):
     avoiding redundancy.
     """
 
-    def __init__(self, columns_to_apply=None, models=None, mandatory_attr_only=False, **model_kwargs):
+    def __init__(self, columns_to_apply=None, models=None, mandatory_attr_only=False, extra_information=None,
+                 **model_kwargs):
         self._columns_to_apply = columns_to_apply
         self._array_column_names = []
-        ModelExtendedManager.__init__(self, models, mandatory_attr_only, **model_kwargs)
+        ModelExtendedManager.__init__(self, models, mandatory_attr_only, extra_information, **model_kwargs)
 
     def _get_features(self, x):
         return x.columns if self._columns_to_apply is None else self._columns_to_apply
@@ -73,8 +75,9 @@ class TargetedTransformer(TransformerMixin, ModelExtendedManager):
 
 class SklearnTargetedTransformer(TargetedTransformer, ABC):
 
-    def __init__(self, columns_to_apply=None, models=None, **model_kwargs):
-        super().__init__(columns_to_apply, models, **model_kwargs)
+    def __init__(self, columns_to_apply=None, models=None, mandatory_attr_only=False, extra_information=None,
+                 **model_kwargs):
+        super().__init__(columns_to_apply, models, mandatory_attr_only, extra_information, **model_kwargs)
 
     def fit(self, x, y=None):
         self._array_column_names = []
