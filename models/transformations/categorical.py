@@ -53,7 +53,7 @@ class OrdinalTargetedTransformer(SklearnTargetedTransformer):
         Issue: handle_unknown: 'use_encoded_value' is not properly working and throws an error
         """
         self._array_column_names.append(feature)
-        if self._model_kwargs['handle_unknown'] == 'use_encoded_value':
+        if 'handle_unknown' in self._model_kwargs and self._model_kwargs['handle_unknown'] == 'use_encoded_value':
             return self._fit_model_with_nans(x, feature)
         else:
             return self._fit_model(x, feature)
@@ -76,7 +76,7 @@ class OrdinalTargetedTransformer(SklearnTargetedTransformer):
         """
         Since the handle unknown is broken in transform, I will bypass it
         """
-        if self._model_kwargs['handle_unknown'] == 'use_encoded_value':
+        if 'handle_unknown' in self._model_kwargs and self._model_kwargs['handle_unknown'] == 'use_encoded_value':
             return self._transform_data_with_nans(x, feature)
         else:
             return self._transform_data(x, feature)
