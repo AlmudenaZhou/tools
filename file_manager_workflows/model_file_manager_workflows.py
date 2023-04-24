@@ -1,3 +1,4 @@
+from numpy import nan
 import logging
 import os
 from typing import Optional, Union
@@ -223,7 +224,10 @@ class LoadWorkflow(ManagerWorkflow):
             model_path = '.'.join(model_class_path.split('.')[:-1])
             models = {model_name: Manager.load(complete_file_path=comp_file_path)
                       for comp_file_path, model_name in zip(model_config_by_id.index, model_names)}
-            model_instance = instance_class_from_module_and_name(model_path, class_name, models=models)
+            model_kwargs = eval(model_config_by_id['model_kwargs'].iloc[0])
+            model_instance = instance_class_from_module_and_name(model_path, class_name, models=models,
+                                                                 extra_information=extra_information,
+                                                                 **model_kwargs)
             return model_instance
 
         else:
