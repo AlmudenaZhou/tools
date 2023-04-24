@@ -101,6 +101,8 @@ class SaveWorkflow(ManagerWorkflow):
         model_class_path = self.get_model_class_path_from_model(model)
         model_id = id(model)
         is_custom = '_models' in model.__dict__.keys()
+        model_kwargs = model._model_kwargs
+
         if save_separated:
 
             assert is_custom, 'If save_separated=True, the model needs to be custom.'
@@ -112,15 +114,16 @@ class SaveWorkflow(ManagerWorkflow):
 
             for specific_model_name, model_to_save in model._models.items():
                 self._add_model_to_model_config(model_class_path, specific_model_name, file_path, True, model_id,
-                                                specific_model_name, **kwargs)
+                                                model_kwargs, specific_model_name, **kwargs)
                 self.manager_module.save(model_to_save, raw_file_name=specific_model_name, file_path=file_path)
 
         else:
-            self._add_model_to_model_config(model_class_path, file_name, file_path, is_custom, model_id, **kwargs)
+            self._add_model_to_model_config(model_class_path, file_name, file_path, is_custom, model_id, model_kwargs,
+                                            **kwargs)
             self.manager_module.save(model, raw_file_name=file_name, file_path=file_path)
 
-    def _add_model_to_model_config(self, model_class_path, file_name, file_path, is_custom, model_id, model_name=None,
-                                   **kwargs):
+    def _add_model_to_model_config(self, model_class_path, file_name, file_path, is_custom, model_id, model_kwargs,
+                                   model_name=None, **kwargs):
         """
         It creates a file with a structure as follows:
 
@@ -144,7 +147,8 @@ class SaveWorkflow(ManagerWorkflow):
             'model_class_path': model_class_path,
             'model_name': model_name,
             'model_id': model_id,
-            'custom': is_custom
+            'custom': is_custom,
+            'model_kwargs': str(model_kwargs)
         }
 
         mandatory_keys_at_save_file = self.model_config[complete_file_path].keys()
