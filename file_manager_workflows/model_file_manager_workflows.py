@@ -144,6 +144,7 @@ class SaveWorkflow(ManagerWorkflow):
         """
         complete_file_path = self.manager_module.get_complete_file_path(file_name, file_path)
 
+        print(model_kwargs)
         self.model_config[complete_file_path] = {
             'model_class_path': model_class_path,
             'model_name': model_name,
@@ -219,6 +220,7 @@ class LoadWorkflow(ManagerWorkflow):
         model_names = model_config_by_id['model_name']
         model_class_path = model_config_by_id['model_class_path'].unique()[0]
         class_name = model_class_path.split('.')[-1]
+        extra_information = model_config_by_id.to_dict()
 
         if None not in model_names:
             model_path = '.'.join(model_class_path.split('.')[:-1])
@@ -231,8 +233,11 @@ class LoadWorkflow(ManagerWorkflow):
             return model_instance
 
         else:
-            assert model_config_by_id.shape[0], 'If there is a None in model names, it can only have saved one model.'
-            return Manager.load(complete_file_path=model_config_by_id.index[0])
+            assert model_config_by_id.shape[0] == 1, 'If there is a None in model names, ' \
+                                                     'it can only have saved one model.'
+            model_instance = Manager.load(complete_file_path=model_config_by_id.index[0])
+            model_instance.extra_information = extra_information
+            return model_instance
 
     @staticmethod
     def _check_model_config_integrity_by_id(model_config_by_id):
