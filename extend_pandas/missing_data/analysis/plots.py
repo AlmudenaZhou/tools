@@ -12,6 +12,12 @@ from tools.extend_pandas.missing_data.base_adapter import MissingMethodsAdapter
 
 class PlotMissingnessAdapter(MissingMethodsAdapter):
 
+    def missingno_corr_plot(self):
+        msno.heatmap(self._obj)
+
+    def missingno_matrix_plot(self):
+        msno.matrix(self._obj)
+
     def missing_variable_plot(self):
         """
         Classic line plot that shows the number of missing values in the x axis and the columns in the y axis
