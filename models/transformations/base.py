@@ -53,6 +53,7 @@ class TargetedTransformer(TransformerMixin, ModelExtendedManager):
     def _get_features(self, x):
         return x.columns if self._columns_to_apply is None else self._columns_to_apply
 
+    @abstractmethod
     def fit(self, x, y=None):
         return self
 
