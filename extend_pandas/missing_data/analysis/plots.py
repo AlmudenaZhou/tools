@@ -23,7 +23,7 @@ class PlotMissingnessAdapter(MissingMethodsAdapter):
         Classic line plot that shows the number of missing values in the x axis and the columns in the y axis
         :return:
         """
-        df = self._obj.missing.missing_variable_summary().sort_values("n_missing")
+        df = self._obj.missing.analysis.missing_variable_summary().sort_values("n_missing")
 
         plot_range = range(1, len(df.index) + 1)
 
@@ -43,7 +43,7 @@ class PlotMissingnessAdapter(MissingMethodsAdapter):
         Histogram of the missing values per row
         :return:
         """
-        df = self._obj.missing.missing_case_summary()
+        df = self._obj.missing.analysis.missing_case_summary()
 
         sns.displot(data=df, x="n_missing", binwidth=1, color="black", bins=bins)
 
@@ -64,7 +64,7 @@ class PlotMissingnessAdapter(MissingMethodsAdapter):
         """
 
         (
-            self._obj.missing.missing_variable_span(
+            self._obj.missing.analysis.missing_variable_span(
                 variable=variable, span_every=span_every
             ).plot.bar(
                 x="span_counter",
