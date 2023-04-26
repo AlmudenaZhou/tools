@@ -114,9 +114,3 @@ class NoTransformer(TargetedTransformer):
     def transform(self, x, y=None):
         features = self._get_features(x)
         return x[features]
-
-    def save_models(self,  models_to_save: Optional[list] = None, file_path: Optional[str] = None):
-        pass
-
-    def load_models(self, models_to_load: Optional[list] = None, file_path: Optional[str] = None):
-        pass
