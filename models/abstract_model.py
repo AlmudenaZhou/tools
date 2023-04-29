@@ -1,25 +1,26 @@
 from abc import ABC, abstractmethod
-from typing import Protocol, Optional, Union
+from typing import Protocol, Optional, Union, TypeVar
 
 import numpy as np
 import pandas as pd
 
 
+Model = TypeVar("Model", bound="AbstractTransformer")
+GenericModel = TypeVar("GenericModel", bound="GenericTransformer")
+
+
 class GenericTransformer(Protocol):
 
-    @abstractmethod
-    def fit(self):
-        return self
+    def fit(self, x: pd.DataFrame, y: Optional[Union[pd.DataFrame, pd.Series, np.ndarray]] = None) -> GenericModel: ...
 
-    @abstractmethod
-    def transform(self):
-        pass
+    def transform(self, x: pd.DataFrame, y: Optional[Union[pd.DataFrame, pd.Series, np.ndarray]] = None) -> np.ndarray:
+        ...
 
 
 class AbstractTransformer(ABC):
 
     @abstractmethod
-    def fit(self, x: pd.DataFrame, y: Optional[Union[pd.DataFrame, pd.Series, np.ndarray]] = None):
+    def fit(self, x: pd.DataFrame, y: Optional[Union[pd.DataFrame, pd.Series, np.ndarray]] = None) -> Model:
         return self
 
     @abstractmethod
