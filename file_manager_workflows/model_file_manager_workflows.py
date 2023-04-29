@@ -222,7 +222,7 @@ class LoadWorkflow(ManagerWorkflow):
         class_name = model_class_path.split('.')[-1]
         extra_information = model_config_by_id.to_dict()
 
-        if None not in model_names:
+        if None not in model_names.values:
             model_path = '.'.join(model_class_path.split('.')[:-1])
             models = {model_name: Manager.load(complete_file_path=comp_file_path)
                       for comp_file_path, model_name in zip(model_config_by_id.index, model_names)}
