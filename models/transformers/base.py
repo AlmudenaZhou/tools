@@ -22,33 +22,6 @@ class TargetedTransformer(TransformerMixin, ModelExtendedManager):
     def _get_features(self, x):
         return x.columns if self._columns_to_apply is None else self._columns_to_apply
 
-    @abstractmethod
-    def fit(self, x, y=None):
-        return self
-
-    @abstractmethod
-    def transform(self, x, y=None):
-        pass
-
-    def _set_mandatory_attributes_from_models(self):
-        self._columns_to_apply = list(self._models.keys())
-
-    def _set_optional_attributes_from_models(self):
-        self._array_column_names = []
-        for model_name, model in self._models.items():
-            self._array_column_names.extend(self._get_array_column_names_from_model(model, model_name))
-
-    @staticmethod
-    def _get_array_column_names_from_model(model: Optional = None, model_name: str = ''):
-        return [model_name]
-
-
-class SklearnTargetedTransformer(TargetedTransformer, ABC):
-
-    def __init__(self, columns_to_apply=None, models=None, mandatory_attr_only=False, extra_information=None,
-                 **model_kwargs):
-        super().__init__(columns_to_apply, models, mandatory_attr_only, extra_information, **model_kwargs)
-
     def fit(self, x, y=None):
         self._array_column_names = []
         self._models = {}
@@ -72,14 +45,23 @@ class SklearnTargetedTransformer(TargetedTransformer, ABC):
     def _individual_transform(self, x, feature):
         pass
 
+    def _set_mandatory_attributes_from_models(self):
+        self._columns_to_apply = list(self._models.keys())
+
+    def _set_optional_attributes_from_models(self):
+        self._array_column_names = []
+        for model_name, model in self._models.items():
+            self._array_column_names.extend(self._get_array_column_names_from_model(model, model_name))
+
+    @staticmethod
+    def _get_array_column_names_from_model(model: Optional = None, model_name: str = ''):
+        return [model_name]
+
 
 class NoTransformer(TargetedTransformer):
 
-    def fit(self, x, y=None):
-        features = self._get_features(x)
-        self._array_column_names.extend(features)
-        return self
+    def _individual_fit(self, x, feature):
+        return None
 
-    def transform(self, x, y=None):
-        features = self._get_features(x)
-        return x[features]
+    def _individual_transform(self, x, feature):
+        return x[feature].values

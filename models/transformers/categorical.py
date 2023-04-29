@@ -4,10 +4,10 @@ from typing import Optional
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 
-from tools.models.transformations.base import SklearnTargetedTransformer
+from tools.models.transformers.base import TargetedTransformer
 
 
-class OneHotTargetedTransformer(SklearnTargetedTransformer):
+class OneHotTargetedTransformer(TargetedTransformer):
 
     def __init__(self, columns_to_apply=None, models=None, mandatory_attr_only=False, extra_information=None,
                  **model_kwargs):
@@ -38,7 +38,7 @@ class OneHotTargetedTransformer(SklearnTargetedTransformer):
         return [f'{model_name}__{self._clean_category_name(category)}' for category in model.categories_[0]]
 
 
-class OrdinalTargetedTransformer(SklearnTargetedTransformer):
+class OrdinalTargetedTransformer(TargetedTransformer):
 
     def __init__(self, ordered_labels=None, columns_to_apply=None, models=None, mandatory_attr_only=False,
                  extra_information=None, **model_kwargs):
