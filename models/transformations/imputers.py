@@ -2,7 +2,7 @@ from typing import Union
 
 from sklearn.impute import KNNImputer
 
-from tools.models.transformations.base import ModelExtendedManager
+from tools.models.extended_file_manager_model import ModelExtendedManager
 
 
 class KNNImputerAdapter(ModelExtendedManager):
