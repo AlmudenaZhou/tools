@@ -5,7 +5,7 @@ from sklearn.impute import KNNImputer
 from tools.models.extended_file_manager_model import ModelExtendedManager
 
 
-class KNNImputerAdapter(ModelExtendedManager):
+class KNNImputerTransformer(ModelExtendedManager):
 
     def __init__(self, n_neighbors: Union[int, list], order_labels_by_num_nans=False):
         self.check_n_neighbours(n_neighbors)
