@@ -113,6 +113,10 @@ class SaveWorkflow(ManagerWorkflow):
             assert hasattr(model, '_models'), 'If save_separated = True, the model needs the _models attribute'
             assert isinstance(model._models, dict), 'If save_separated = True, the model._models needs to be a dict'
 
+            if len(model._models) == 0:
+                logging.warning(f'{model} has you passed, has the _model attribute empty. '
+                                'Review if you have fit the model')
+
             for specific_model_name, model_to_save in model._models.items():
                 self._add_model_to_model_config(model_class_path, specific_model_name, file_path, True, model_id,
                                                 model_kwargs, specific_model_name, **kwargs)
