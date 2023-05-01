@@ -29,7 +29,11 @@ class TargetedTransformer(TransformerMixin, ModelExtendedManager):
 
         for feature in features:
             self._models[feature] = self._individual_fit(x, feature)
+            self._set_individual_array_column_name(feature)
         return self
+
+    def _set_individual_array_column_name(self, feature):
+        self._array_column_names.append(feature)
 
     @abstractmethod
     def _individual_fit(self, x, feature):
