@@ -21,7 +21,6 @@ class OneHotTargetedTransformer(TargetedTransformer):
         column_names = [f'{feature}__{self._clean_category_name(category)}'
                         for category in self._models[feature].categories_[0]]
         self._array_column_names.extend(column_names)
-        return ohe
 
     @staticmethod
     def _clean_category_name(category):
@@ -39,9 +38,6 @@ class OrdinalTargetedTransformer(TargetedTransformer):
                  extra_information=None, **model_kwargs):
         self._ordered_labels = ordered_labels
         super().__init__(columns_to_apply, models, mandatory_attr_only, extra_information, **model_kwargs)
-
-    def fit(self, x, y=None):
-        return super().fit(x)
 
     def _individual_fit(self, x, feature):
         """
