@@ -28,12 +28,6 @@ class OneHotTargetedTransformer(TargetedTransformer):
         category = re.sub('\s+', '_', category)
         return category
 
-    def transform(self, x, y=None):
-        return super().transform(x)
-
-    def _individual_transform(self, x, feature):
-        return self._models[feature].transform(x[[feature]])
-
     def _get_array_column_names_from_model(self, model: Optional = None, model_name: str = ''):
         return [f'{model_name}__{self._clean_category_name(category)}' for category in model.categories_[0]]
 
@@ -68,9 +62,6 @@ class OrdinalTargetedTransformer(TargetedTransformer):
     def _fit_model_with_nans(self, x, feature):
         x_filtered = x.loc[x[feature].notna()]
         return self._fit_model(x_filtered, feature)
-
-    def transform(self, x, y=None):
-        return super().transform(x)
 
     def _individual_transform(self, x, feature):
         """

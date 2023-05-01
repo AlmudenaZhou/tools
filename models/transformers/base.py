@@ -41,9 +41,8 @@ class TargetedTransformer(TransformerMixin, ModelExtendedManager):
         transformed_features = np.concatenate(transformed_features, axis=1)
         return transformed_features
 
-    @abstractmethod
     def _individual_transform(self, x, feature):
-        pass
+        return self._models[feature].transform(x[[feature]])
 
     def _set_mandatory_attributes_from_models(self):
         self._columns_to_apply = list(self._models.keys())
