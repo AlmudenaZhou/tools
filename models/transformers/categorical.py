@@ -43,7 +43,7 @@ class OrdinalTargetedTransformer(TargetedTransformer):
         """
         Issue: handle_unknown: 'use_encoded_value' is not properly working and throws an error
         """
-        self._array_column_names.append(feature)
+
         if 'handle_unknown' in self._model_kwargs and self._model_kwargs['handle_unknown'] == 'use_encoded_value':
             return self._fit_model_with_nans(x, feature)
         else:
