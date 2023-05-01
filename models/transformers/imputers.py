@@ -1,8 +1,46 @@
 from typing import Union
 
-from sklearn.impute import KNNImputer
+from sklearn.impute import SimpleImputer, KNNImputer
 
-from tools.models.extended_file_manager_model import ModelExtendedManager
+from tools.file_manager_workflows.extended_file_manager_model import ModelExtendedManager
+
+
+class SimpleImputerTransformer(ModelExtendedManager):
+
+    def __init__(self, strategies: Union[str, list], order_labels_by_num_nans=False):
+        self.check_strategies(strategies)
+        self._strategies = strategies
+        self._order_labels_by_num_nans = order_labels_by_num_nans
+        super().__init__()
+
+    @staticmethod
+    def check_strategies(strategies):
+        if not (isinstance(strategies, (str, list))):
+            raise TypeError('strategies must be an integer or a list')
+
+    def _set_mandatory_attributes_from_models(self):
+        pass
+
+    def _set_optional_attributes_from_models(self):
+        pass
+
+    def fit(self, x, y=None, model_name=''):
+
+        if isinstance(self._strategies, str):
+            self._models[f'{model_name}{self._strategies}'] = self._individual_fit(x, self._strategies)
+        else:
+            for strategy in self._strategies:
+                self._models[f'{model_name}{strategy}'] = self._individual_fit(x, strategy)
+        return self
+
+    @staticmethod
+    def _individual_fit(x, strategy):
+        return SimpleImputer(strategy=strategy).fit(x)
+
+    def transform(self, x, y=None):
+        if isinstance(self._strategies, str):
+            return list(self._models.values())[0].transform(x)
+        return {model_name: model.transform(x) for model_name, model in self._models.items()}
 
 
 class KNNImputerTransformer(ModelExtendedManager):
