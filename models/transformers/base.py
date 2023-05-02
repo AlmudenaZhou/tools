@@ -67,4 +67,4 @@ class NoTransformer(TargetedTransformer):
         return None
 
     def _individual_transform(self, x, feature):
-        return x[feature].values
+        return x[feature].values.reshape(x.shape[0], 1)
