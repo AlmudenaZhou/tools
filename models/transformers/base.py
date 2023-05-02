@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 from sklearn.base import TransformerMixin
 
-from tools.models.extended_file_manager_model import ModelExtendedManager
+from tools.file_manager_workflows.extended_file_manager_model import ModelExtendedManager
 
 
 class TargetedTransformer(TransformerMixin, ModelExtendedManager):
