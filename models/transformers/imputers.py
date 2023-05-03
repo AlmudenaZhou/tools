@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from abc import abstractmethod
 from typing import Union
 
 from sklearn.impute import SimpleImputer, KNNImputer
@@ -5,19 +8,23 @@ from sklearn.impute import SimpleImputer, KNNImputer
 from tools.file_manager_workflows.extended_file_manager_model import ModelExtendedManager
 
 
-class SimpleImputerTransformer(ModelExtendedManager):
+class GenericImputerTransformer(ModelExtendedManager):
 
-    def __init__(self, strategies: Union[str, list], order_labels_by_num_nans=False):
-        self.check_strategies(strategies)
-        self._strategies = strategies
+    single_parameter_type: type
+
+    def __init__(self, parameters: Union[single_parameter_type, list] = None, order_labels_by_num_nans=False,
+                 models=None, mandatory_attr_only=False, extra_information=None, **model_kwargs):
+        self._model_kwargs = model_kwargs
+        super().__init__(models, mandatory_attr_only, extra_information)
+        self.check_parameters(parameters)
+        self._parameters = parameters
         self._order_labels_by_num_nans = order_labels_by_num_nans
-        super().__init__()
 
-    @staticmethod
-    def check_strategies(strategies):
-        if not (isinstance(strategies, (str, list))):
+    def check_parameters(self, parameters):
+        if self._models is None and not (isinstance(parameters, (self.single_parameter_type, list))):
             raise TypeError('strategies must be an integer or a list')
 
+    @abstractmethod
     def _set_mandatory_attributes_from_models(self):
         pass
 
@@ -26,56 +33,40 @@ class SimpleImputerTransformer(ModelExtendedManager):
 
     def fit(self, x, y=None, model_name=''):
 
-        if isinstance(self._strategies, str):
-            self._models[f'{model_name}{self._strategies}'] = self._individual_fit(x, self._strategies)
+        if isinstance(self._parameters, self.single_parameter_type):
+            self._models[f'{model_name}{self._parameters}'] = self._individual_fit(x, self._parameters)
         else:
-            for strategy in self._strategies:
-                self._models[f'{model_name}{strategy}'] = self._individual_fit(x, strategy)
+            for parameter in self._parameters:
+                self._models[f'{model_name}{parameter}'] = self._individual_fit(x, parameter)
         return self
 
-    @staticmethod
-    def _individual_fit(x, strategy):
-        return SimpleImputer(strategy=strategy).fit(x)
+    @abstractmethod
+    def _individual_fit(self, x, parameter):
+        pass
 
     def transform(self, x, y=None):
-        if isinstance(self._strategies, str):
+        if isinstance(self._parameters, self.single_parameter_type):
             return list(self._models.values())[0].transform(x)
         return {model_name: model.transform(x) for model_name, model in self._models.items()}
 
 
-class KNNImputerTransformer(ModelExtendedManager):
+class SimpleImputerTransformer(GenericImputerTransformer):
 
-    def __init__(self, n_neighbors: Union[int, list], order_labels_by_num_nans=False):
-        self.check_n_neighbours(n_neighbors)
-        self._n_neighbors = n_neighbors
-        self._order_labels_by_num_nans = order_labels_by_num_nans
-        super().__init__()
+    single_parameter_type = str
 
-    @staticmethod
-    def check_n_neighbours(n_neighbors):
-        if not (isinstance(n_neighbors, (int, list))):
-            raise TypeError('n_neighbors must be an integer or a list')
+    def _individual_fit(self, x, parameter):
+        return SimpleImputer(strategy=parameter, **self._model_kwargs).fit(x)
 
     def _set_mandatory_attributes_from_models(self):
-        pass
+        self._parameters = [simple_imputer.strategy for simple_imputer in self._models.values()]
 
-    def _set_optional_attributes_from_models(self):
-        pass
 
-    def fit(self, x, y=None, model_name=''):
+class KNNImputerTransformer(GenericImputerTransformer):
 
-        if isinstance(self._n_neighbors, int):
-            self._models[f'{model_name}{self._n_neighbors}'] = self._individual_fit(x, self._n_neighbors)
-        else:
-            for n_neighbors in self._n_neighbors:
-                self._models[f'{model_name}{n_neighbors}'] = self._individual_fit(x, n_neighbors)
-        return self
+    single_parameter_type = int
 
-    @staticmethod
-    def _individual_fit(x, n_neighbours):
-        return KNNImputer(n_neighbors=n_neighbours).fit(x)
+    def _individual_fit(self, x, parameter):
+        return KNNImputer(n_neighbors=parameter, **self._model_kwargs).fit(x)
 
-    def transform(self, x, y=None):
-        if isinstance(self._n_neighbors, int):
-            return list(self._models.values())[0].transform(x)
-        return {model_name: model.transform(x) for model_name, model in self._models.items()}
+    def _set_mandatory_attributes_from_models(self):
+        self._parameters = [knn.n_neighbors for knn in self._models.values()]
