@@ -5,6 +5,7 @@ from typing import Optional
 
 import pandas as pd
 
+from tools.file_manager_workflows.auxiliary import hash_object
 from tools.file_manager_workflows.file_manager_modules import YamlManager, Manager
 from tools.misc import instance_class_from_module_and_name
 
@@ -100,7 +101,7 @@ class SaveWorkflow(ManagerWorkflow):
 
     def _save_model(self, model, file_name, file_path, save_separated, **kwargs):
         model_class_path = self.get_model_class_path_from_model(model)
-        model_id = id(model)
+        model_id = hash_object(model)
         is_custom = '_models' in model.__dict__.keys()
         model_kwargs = model._model_kwargs
 
