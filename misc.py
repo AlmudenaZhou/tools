@@ -1,4 +1,5 @@
 import importlib
+import re
 import hashlib
 import pickle
 
@@ -17,3 +18,10 @@ def hash_object(obj):
     # Generate a SHA-256 hash of the object bytes
     hash_obj = hashlib.sha256(obj_bytes)
     return hash_obj.hexdigest()
+
+
+def pascal_to_snake_case(name):
+    name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    name = re.sub('__([A-Z])', r'_\1', name)
+    name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', name)
+    return name.lower()

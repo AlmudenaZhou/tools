@@ -3,9 +3,12 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Union
 
-from sklearn.impute import SimpleImputer, KNNImputer
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import SimpleImputer, KNNImputer, IterativeImputer
 
 from tools.file_manager_workflows.extended_file_manager_model import ModelExtendedManager
+from tools.file_manager_workflows.model_file_manager_workflows import ManagerWorkflow
+from tools.misc import pascal_to_snake_case
 
 
 class GenericImputerTransformer(ModelExtendedManager):
@@ -67,5 +70,38 @@ class KNNImputerTransformer(GenericImputerTransformer):
     def _individual_fit(self, x, parameter):
         return KNNImputer(n_neighbors=parameter, **self._model_kwargs).fit(x)
 
-    def _set_mandatory_attributes_from_models(self):
-        self._parameters = [knn.n_neighbors for knn in self._models.values()]
+
+class IterativeImputerTransformer(GenericImputerTransformer):
+
+    parameter_name = 'estimator'
+
+    def check_parameters(self, parameters):
+        pass
+
+    @staticmethod
+    def _get_paramater_name(parameter):
+        model_path = ManagerWorkflow.get_model_class_path_from_model(parameter, is_model_already_a_class=True)
+        model_name = model_path.split('.')[-1]
+        parameter_name = pascal_to_snake_case(model_name)
+        return parameter_name
+
+    def fit(self, x, y=None, model_name=''):
+
+        if isinstance(self._parameters, list):
+            for parameter in self._parameters:
+                parameter_name = self._get_paramater_name(parameter)
+                self._models[f'{model_name}{parameter_name}'] = self._individual_fit(x, parameter)
+        else:
+            parameter_name = self._get_paramater_name(self._parameters)
+            self._models[f'{model_name}{parameter_name}'] = self._individual_fit(x, self._parameters)
+
+        return self
+
+    def _individual_fit(self, x, parameter):
+        """
+        BayesianRidge and ExtraTreeRegressor recommended
+        :param x:
+        :param parameter:
+        :return:
+        """
+        return IterativeImputer(estimator=parameter(), **self._model_kwargs).fit(x)

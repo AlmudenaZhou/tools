@@ -4,5 +4,6 @@ OneHotTargetedTransformer: PickleManager
 OrdinalTargetedTransformer: PickleManager
 SimpleImputerTransformer: PickleManager
 KNNImputerTransformer: PickleManager
+IterativeImputerTransformer: PickleManager
 StandardScalerTransformer: PickleManager
 MinMaxScaler: PIckleManager
