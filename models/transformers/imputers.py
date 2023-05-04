@@ -11,6 +11,7 @@ from tools.file_manager_workflows.extended_file_manager_model import ModelExtend
 class GenericImputerTransformer(ModelExtendedManager):
 
     single_parameter_type: type
+    parameter_name: str
 
     def __init__(self, parameters: Union[single_parameter_type, list] = None, order_labels_by_num_nans=False,
                  models=None, mandatory_attr_only=False, extra_information=None, **model_kwargs):
@@ -24,9 +25,8 @@ class GenericImputerTransformer(ModelExtendedManager):
         if self._models is None and not (isinstance(parameters, (self.single_parameter_type, list))):
             raise TypeError('strategies must be an integer or a list')
 
-    @abstractmethod
     def _set_mandatory_attributes_from_models(self):
-        pass
+        self._parameters = [getattr(imputer, self.parameter_name) for imputer in self._models.values()]
 
     def _set_optional_attributes_from_models(self):
         pass
@@ -53,17 +53,16 @@ class GenericImputerTransformer(ModelExtendedManager):
 class SimpleImputerTransformer(GenericImputerTransformer):
 
     single_parameter_type = str
+    parameter_name = 'strategy'
 
     def _individual_fit(self, x, parameter):
         return SimpleImputer(strategy=parameter, **self._model_kwargs).fit(x)
-
-    def _set_mandatory_attributes_from_models(self):
-        self._parameters = [simple_imputer.strategy for simple_imputer in self._models.values()]
 
 
 class KNNImputerTransformer(GenericImputerTransformer):
 
     single_parameter_type = int
+    parameter_name = 'n_neighbors'
 
     def _individual_fit(self, x, parameter):
         return KNNImputer(n_neighbors=parameter, **self._model_kwargs).fit(x)
