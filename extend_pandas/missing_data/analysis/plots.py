@@ -15,8 +15,11 @@ class PlotMissingnessAdapter(MissingMethodsAdapter):
     def missingno_corr_plot(self):
         msno.heatmap(self._obj)
 
-    def missingno_matrix_plot(self):
-        msno.matrix(self._obj)
+    def missingno_matrix_plot(self, order_by: Union[str, list] = None):
+        if order_by is None:
+            msno.matrix(self._obj)
+        else:
+            msno.matrix(self._obj.sort_values(order_by))
 
     def missing_variable_plot(self):
         """
