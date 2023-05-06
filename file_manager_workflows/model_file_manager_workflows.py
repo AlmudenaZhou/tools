@@ -16,8 +16,11 @@ class ManagerWorkflow:
         self.manager_module = None
 
     @staticmethod
-    def get_model_class_path_from_model(model):
-        model_class_path = model.__class__.__str__(model.__class__)
+    def get_model_class_path_from_model(model, is_model_already_a_class=False):
+        if not is_model_already_a_class:
+            model_class_path = model.__class__.__str__(model.__class__)
+        else:
+            model_class_path = model.__str__(model)
         model_class_path = model_class_path.split("'")[1]
         return model_class_path
 
