@@ -18,8 +18,7 @@ class GenericImputerTransformer(ModelExtendedManager):
 
     def __init__(self, parameters: Union[single_parameter_type, list] = None, order_labels_by_num_nans=False,
                  models=None, mandatory_attr_only=False, extra_information=None, **model_kwargs):
-        self._model_kwargs = model_kwargs
-        super().__init__(models, mandatory_attr_only, extra_information)
+        super().__init__(models, mandatory_attr_only, extra_information, **model_kwargs)
         self.check_parameters(parameters)
         self._parameters = parameters
         self._order_labels_by_num_nans = order_labels_by_num_nans
