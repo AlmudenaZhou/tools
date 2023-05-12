@@ -48,6 +48,15 @@ class TargetedTransformer(TransformerMixin, ModelExtendedManager):
     def _individual_transform(self, x, feature):
         return self._models[feature].transform(x[[feature]])
 
+    def inverse_transform(self, x, y=None):
+        features = self._get_features(x)
+        inv_transformed_features = [self._individual_inverse_transform(x, feature) for feature in features]
+        inv_transformed_features = np.concatenate(inv_transformed_features, axis=1)
+        return inv_transformed_features
+
+    def _individual_inverse_transform(self, x, feature):
+        return self._models[feature].inverse_transform(x[[feature]])
+
     def _set_mandatory_attributes_from_models(self):
         self._columns_to_apply = list(self._models.keys())
 
