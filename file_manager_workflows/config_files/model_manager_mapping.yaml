@@ -6,4 +6,4 @@ SimpleImputerTransformer: PickleManager
 KNNImputerTransformer: PickleManager
 IterativeImputerTransformer: PickleManager
 StandardScalerTransformer: PickleManager
-MinMaxScaler: PIckleManager
+MinMaxScalerTransformer : PickleManager
