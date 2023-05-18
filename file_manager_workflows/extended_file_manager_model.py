@@ -9,6 +9,7 @@ class ModelExtendedManager(ABC):
         self._start_from_model(models, mandatory_attr_only)
         self._model_kwargs = model_kwargs
         self.extra_information = extra_information
+        self.saved_at_file = None
 
     def _start_from_model(self, models, mandatory_attr_only=False):
         self._models = {}
