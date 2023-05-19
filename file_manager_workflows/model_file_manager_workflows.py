@@ -6,7 +6,7 @@ from typing import Optional
 import pandas as pd
 
 from tools.file_manager_workflows.file_manager_modules import YamlManager, Manager
-from tools.misc import instance_class_from_module_and_name, hash_object
+from tools.misc import instance_class_from_module_and_name, hash_object_with_sha256
 
 
 class ManagerWorkflow:
@@ -103,15 +103,17 @@ class SaveWorkflow(ManagerWorkflow):
 
     def _save_model(self, model, file_name, file_path, save_separated, **kwargs):
         model_class_path = self.get_model_class_path_from_model(model)
-        model_id = hash_object(model)
+        model_id = hash_object_with_sha256(model)
         is_custom = '_models' in model.__dict__.keys()
         model_kwargs = model._model_kwargs
+
+        saved_at_file = os.path.join(file_path, file_name)
+
+        model.saved_at_file = saved_at_file
 
         if save_separated:
 
             assert is_custom, 'If save_separated=True, the model needs to be custom.'
-
-            file_path = os.path.join(file_path, file_name)
 
             assert hasattr(model, '_models'), 'If save_separated = True, the model needs the _models attribute'
             assert isinstance(model._models, dict), 'If save_separated = True, the model._models needs to be a dict'
@@ -121,14 +123,15 @@ class SaveWorkflow(ManagerWorkflow):
                                 'Review if you have fit the model')
 
             for specific_model_name, model_to_save in model._models.items():
-                self._add_model_to_model_config(model_class_path, specific_model_name, file_path, True, model_id,
+                self._add_model_to_model_config(model_class_path, specific_model_name, saved_at_file, True, model_id,
                                                 model_kwargs, specific_model_name, **kwargs)
-                self.manager_module.save(model_to_save, raw_file_name=specific_model_name, file_path=file_path)
+                self.manager_module.save(model_to_save, raw_file_name=specific_model_name, file_path=saved_at_file)
 
         else:
             self._add_model_to_model_config(model_class_path, file_name, file_path, is_custom, model_id, model_kwargs,
                                             **kwargs)
             self.manager_module.save(model, raw_file_name=file_name, file_path=file_path)
+
 
     def _add_model_to_model_config(self, model_class_path, file_name, file_path, is_custom, model_id, model_kwargs,
                                    model_name=None, **kwargs):

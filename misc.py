@@ -11,7 +11,7 @@ def instance_class_from_module_and_name(module_name, class_name, **class_kwargs)
     return instance
 
 
-def hash_object(obj):
+def hash_object_with_sha256(obj):
     # Convert the object to a bytes string using pickle
     obj_bytes = pickle.dumps(obj)
 
