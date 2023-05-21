@@ -2,8 +2,8 @@
 NoTransformer: PickleManager
 OneHotTargetedTransformer: PickleManager
 OrdinalTargetedTransformer: PickleManager
+StandardScalerTransformer: PickleManager
+MinMaxScalerTransformer : PickleManager
 SimpleImputerTransformer: PickleManager
 KNNImputerTransformer: PickleManager
 IterativeImputerTransformer: PickleManager
-StandardScalerTransformer: PickleManager
-MinMaxScalerTransformer : PickleManager
